@@ -41,6 +41,19 @@ type Sentence = {
   parts: string[];
 };
 
+type DailyModeProgress = {
+  pending: number[];
+  review: number[];
+  done: number[];
+};
+
+type DailyPracticeEntry = {
+  quiz?: DailyModeProgress;
+  build?: DailyModeProgress;
+};
+
+type DailyPractice = Record<string, DailyPracticeEntry>;
+
 const unit2Sentences: Sentence[] = [
   {
     chinese: "这是一份工作时间固定的朝九晚五的工作。",
@@ -263,6 +276,46 @@ function normalize(value: string) {
     .replace(/\s+/g, " ");
 }
 
+function localDateKey() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function prepareDailyMode(saved: DailyModeProgress | undefined, itemIds: number[]): DailyModeProgress {
+  if (!saved) return { pending: [...itemIds], review: [], done: [] };
+
+  const validIds = new Set(itemIds);
+  const done = [...new Set(saved.done.filter((id) => validIds.has(id)))];
+  const review = [...new Set(saved.review.filter((id) => validIds.has(id) && !done.includes(id)))];
+  const pending = [...new Set(saved.pending.filter((id) => validIds.has(id) && !done.includes(id) && !review.includes(id)))];
+  const accountedFor = new Set([...pending, ...review, ...done]);
+  itemIds.forEach((id) => {
+    if (!accountedFor.has(id)) pending.push(id);
+  });
+  return { pending, review, done };
+}
+
+function recordDailyResult(mode: DailyModeProgress, itemId: number, isCorrect: boolean): DailyModeProgress {
+  const pending = [...mode.pending];
+  const review = [...mode.review];
+  const done = [...mode.done];
+  const isFirstPass = pending[0] === itemId;
+
+  if (isFirstPass) pending.shift();
+  else if (review[0] === itemId) review.shift();
+
+  if (isCorrect) {
+    if (!done.includes(itemId)) done.push(itemId);
+  } else if (!review.includes(itemId)) {
+    review.push(itemId);
+  }
+
+  return { pending, review, done };
+}
+
 export default function Home() {
   const [tab, setTab] = useState<"learn" | "quiz" | "build" | "manage">("learn");
   const [activeBookId, setActiveBookId] = useState(defaultBook.id);
@@ -273,13 +326,11 @@ export default function Home() {
   const activeUnit = activeBook.units.find((unit) => unit.id === activeUnitId) ?? activeBook.units[0];
   const [chunks, setChunks] = useState<Chunk[]>(starterChunks);
   const [progress, setProgress] = useState<Progress>({});
+  const [dailyPractice, setDailyPractice] = useState<DailyPractice>({});
   const [cardIndex, setCardIndex] = useState(0);
   const [revealed, setRevealed] = useState(false);
-  const [quizIndex, setQuizIndex] = useState(0);
   const [answer, setAnswer] = useState("");
   const [feedback, setFeedback] = useState<"correct" | "wrong" | null>(null);
-  const [reviewWrong, setReviewWrong] = useState(false);
-  const [sentenceIndex, setSentenceIndex] = useState(0);
   const [selectedParts, setSelectedParts] = useState<number[]>([]);
   const [sentenceFeedback, setSentenceFeedback] = useState<"correct" | "wrong" | null>(null);
   const [scenarioAnswer, setScenarioAnswer] = useState("");
@@ -291,6 +342,7 @@ export default function Home() {
   useEffect(() => {
     const savedChunks = window.localStorage.getItem("bec-chunks");
     const savedProgress = window.localStorage.getItem("bec-progress");
+    const savedDailyPractice = window.localStorage.getItem("bec-daily-practice");
     if (savedChunks) {
       try {
         const personalChunks = JSON.parse(savedChunks) as Chunk[];
@@ -301,7 +353,20 @@ export default function Home() {
         setChunks(starterChunks);
       }
     }
-    if (savedProgress) setProgress(JSON.parse(savedProgress));
+    if (savedProgress) {
+      try {
+        setProgress(JSON.parse(savedProgress));
+      } catch {
+        setProgress({});
+      }
+    }
+    if (savedDailyPractice) {
+      try {
+        setDailyPractice(JSON.parse(savedDailyPractice));
+      } catch {
+        setDailyPractice({});
+      }
+    }
     setHydrated(true);
   }, []);
 
@@ -309,7 +374,8 @@ export default function Home() {
     if (!hydrated) return;
     window.localStorage.setItem("bec-chunks", JSON.stringify(chunks));
     window.localStorage.setItem("bec-progress", JSON.stringify(progress));
-  }, [chunks, progress, hydrated]);
+    window.localStorage.setItem("bec-daily-practice", JSON.stringify(dailyPractice));
+  }, [chunks, progress, dailyPractice, hydrated]);
 
   const stats = useMemo(() => {
     const attempts = Object.values(progress).reduce(
@@ -327,11 +393,18 @@ export default function Home() {
     return { attempts, correct, mastered };
   }, [chunks, progress]);
 
-  const wrongChunks = chunks.filter((chunk) => (progress[chunk.id]?.wrong ?? 0) > 0);
-  const quizPool = reviewWrong && wrongChunks.length ? wrongChunks : chunks;
   const currentCard = chunks[cardIndex % chunks.length] ?? starterChunks[0];
-  const currentQuiz = quizPool[quizIndex % quizPool.length] ?? starterChunks[0];
-  const currentSentence = activeUnit.sentences[sentenceIndex];
+  const dailyKey = `${localDateKey()}::${activeBook.id}::${activeUnit.id}`;
+  const quizMode = prepareDailyMode(dailyPractice[dailyKey]?.quiz, chunks.map((chunk) => chunk.id));
+  const buildMode = prepareDailyMode(dailyPractice[dailyKey]?.build, activeUnit.sentences.map((_, index) => index));
+  const currentQuizId = quizMode.pending[0] ?? quizMode.review[0];
+  const currentSentenceId = buildMode.pending[0] ?? buildMode.review[0];
+  const currentQuiz = chunks.find((chunk) => chunk.id === currentQuizId);
+  const currentSentence = activeUnit.sentences[currentSentenceId];
+  const quizComplete = currentQuizId === undefined;
+  const buildComplete = currentSentenceId === undefined;
+  const quizPhase = quizMode.pending.length ? "first" : quizMode.review.length ? "review" : "done";
+  const buildPhase = buildMode.pending.length ? "first" : buildMode.review.length ? "review" : "done";
   const accuracy = stats.attempts
     ? Math.round((stats.correct / stats.attempts) * 100)
     : 0;
@@ -371,7 +444,7 @@ export default function Home() {
 
   function checkAnswer(event: React.FormEvent) {
     event.preventDefault();
-    if (!answer.trim() || feedback) return;
+    if (!answer.trim() || feedback || !currentQuiz) return;
     const isCorrect = normalize(answer) === normalize(currentQuiz.english);
     setFeedback(isCorrect ? "correct" : "wrong");
     setProgress((current) => ({
@@ -384,15 +457,16 @@ export default function Home() {
   }
 
   function nextQuestion() {
-    setQuizIndex((value) => (value + 1) % quizPool.length);
-    setAnswer("");
-    setFeedback(null);
-  }
-
-  function toggleWrongReview() {
-    if (!wrongChunks.length) return;
-    setReviewWrong((value) => !value);
-    setQuizIndex(0);
+    if (!feedback || !currentQuiz) return;
+    const isCorrect = feedback === "correct";
+    setDailyPractice((current) => {
+      const entry = current[dailyKey] ?? {};
+      const mode = prepareDailyMode(entry.quiz, chunks.map((chunk) => chunk.id));
+      return {
+        ...current,
+        [dailyKey]: { ...entry, quiz: recordDailyResult(mode, currentQuiz.id, isCorrect) },
+      };
+    });
     setAnswer("");
     setFeedback(null);
   }
@@ -408,13 +482,23 @@ export default function Home() {
   }
 
   function checkSentence() {
+    if (!currentSentence) return;
     if (selectedParts.length !== currentSentence.parts.length) return;
     const isCorrect = selectedParts.every((part, index) => part === index);
     setSentenceFeedback(isCorrect ? "correct" : "wrong");
   }
 
-  function resetSentence(next = false) {
-    if (next) setSentenceIndex((value) => (value + 1) % activeUnit.sentences.length);
+  function nextSentence() {
+    if (!sentenceFeedback || currentSentenceId === undefined) return;
+    const isCorrect = sentenceFeedback === "correct";
+    setDailyPractice((current) => {
+      const entry = current[dailyKey] ?? {};
+      const mode = prepareDailyMode(entry.build, activeUnit.sentences.map((_, index) => index));
+      return {
+        ...current,
+        [dailyKey]: { ...entry, build: recordDailyResult(mode, currentSentenceId, isCorrect) },
+      };
+    });
     setSelectedParts([]);
     setSentenceFeedback(null);
   }
@@ -424,8 +508,6 @@ export default function Home() {
     setActiveUnitId(unit.id);
     setChunks(unit.chunks);
     setCardIndex(0);
-    setQuizIndex(0);
-    setSentenceIndex(0);
     setRevealed(false);
     setAnswer("");
     setFeedback(null);
@@ -565,13 +647,19 @@ export default function Home() {
             </section>
           )}
 
-          {tab === "quiz" && (
+          {tab === "quiz" && quizComplete && (
+            <section className="daily-complete" aria-live="polite">
+              <span>✓ TODAY COMPLETE</span>
+              <h2>今天的快速测验已经全部答对。</h2>
+              <p>首轮做过的题不会再整轮重复；错题也已经全部清零，明天会自动开始新一轮。</p>
+            </section>
+          )}
+
+          {tab === "quiz" && !quizComplete && currentQuiz && (
             <section className="quiz-stage" aria-live="polite">
               <div className="stage-meta">
-                <span>QUESTION {String(quizIndex + 1).padStart(2, "0")}</span>
-                <button className={`mode-toggle ${reviewWrong ? "active" : ""}`} onClick={toggleWrongReview} disabled={!wrongChunks.length}>
-                  {reviewWrong ? `错题重练 · ${wrongChunks.length}` : `错题本 · ${wrongChunks.length}`}
-                </button>
+                <span>{quizPhase === "first" ? `首轮剩余 ${quizMode.pending.length} 题` : `错题清零 · 剩余 ${quizMode.review.length} 题`}</span>
+                <span className={`level-pill ${quizPhase === "review" ? "review" : ""}`}>{quizPhase === "first" ? "今日首轮" : "只练错题"}</span>
               </div>
               <div className="quiz-prompt">
                 <span>请写出完整意群</span>
@@ -594,19 +682,27 @@ export default function Home() {
                     <strong>{feedback === "correct" ? "答对了，很稳。" : "差一点，把这个意群整体记住。"}</strong>
                     {feedback === "wrong" && <p>正确答案：<b>{currentQuiz.english}</b></p>}
                     <button type="button" className="feedback-audio" onClick={() => speak(chunkAudioText(currentQuiz))}>▶ 听英式发音</button>
-                    <button type="button" onClick={nextQuestion}>下一题 →</button>
+                    <button type="button" onClick={nextQuestion}>{quizMode.pending.length === 1 && feedback === "correct" && quizMode.review.length === 0 ? "完成今日测验 →" : "下一题 →"}</button>
                   </div>
                 )}
               </form>
             </section>
           )}
 
-          {tab === "build" && (
+          {tab === "build" && buildComplete && (
+            <section className="daily-complete" aria-live="polite">
+              <span>✓ TODAY COMPLETE</span>
+              <h2>今天的组装句子已经全部完成。</h2>
+              <p>系统只保留尚未答对的句子，不会重新开启整轮练习；明天会自动重置。</p>
+            </section>
+          )}
+
+          {tab === "build" && !buildComplete && currentSentence && (
             <div className="build-stack">
               <section className="build-stage" aria-live="polite">
                 <div className="stage-meta">
-                  <span>SENTENCE {String(sentenceIndex + 1).padStart(2, "0")} / {String(activeUnit.sentences.length).padStart(2, "0")}</span>
-                  <span className="level-pill">意群组句</span>
+                  <span>{buildPhase === "first" ? `首轮剩余 ${buildMode.pending.length} 句` : `错题清零 · 剩余 ${buildMode.review.length} 句`}</span>
+                  <span className={`level-pill ${buildPhase === "review" ? "review" : ""}`}>{buildPhase === "first" ? "今日首轮" : "只练错题"}</span>
                 </div>
                 <div className="sentence-prompt">
                   <span>请按正确顺序点击下方意群</span>
@@ -635,7 +731,7 @@ export default function Home() {
                   <div className={`feedback ${sentenceFeedback}`}>
                     <strong>{sentenceFeedback === "correct" ? "顺序正确。你正在用意群说话。" : "顺序还不对，再观察一下句子的骨架。"}</strong>
                     <p>{sentenceFeedback === "wrong" && `参考：${currentSentence.parts.join(" ")}`}</p>
-                    <button onClick={() => resetSentence(sentenceFeedback === "correct")}>{sentenceFeedback === "correct" ? "下一句 →" : "重新排列"}</button>
+                    <button onClick={nextSentence}>{sentenceFeedback === "correct" ? "下一句 →" : "记入错题，下一句 →"}</button>
                   </div>
                 )}
               </section>

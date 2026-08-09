@@ -88,6 +88,7 @@ button { color: inherit; }
 .study-stage, .quiz-stage, .coming-stage { background: var(--card); border: 1px solid var(--line); border-radius: 28px 28px 28px 8px; padding: clamp(22px, 4vw, 42px); box-shadow: 0 16px 55px rgba(50,60,53,.07); }
 .stage-meta { display: flex; justify-content: space-between; align-items: center; color: var(--muted); font-size: 10px; font-weight: 800; letter-spacing: .17em; }
 .level-pill { background: #edf3ef; color: var(--teal); padding: 7px 10px; border-radius: 999px; letter-spacing: .06em; }
+.level-pill.review { background: #fff0d1; color: #77521a; }
 .mode-toggle { border: 1px solid #d6dfda; background: #edf3ef; color: var(--teal); padding: 7px 10px; border-radius: 999px; font-size: 10px; font-weight: 800; cursor: pointer; }
 .mode-toggle.active { background: var(--teal); color: #fff; }
 .mode-toggle:disabled { opacity: .48; cursor: not-allowed; }
@@ -136,6 +137,11 @@ button { color: inherit; }
 .feedback p { margin: 8px 0 0; }
 .feedback button { display: block; margin: 14px 0 0 auto; border: 0; background: transparent; cursor: pointer; font-weight: 800; color: inherit; }
 .feedback .feedback-audio { margin: 13px 0 0; border: 1px solid currentColor; border-radius: 999px; padding: 7px 11px; font-size: 11px; }
+
+.daily-complete { min-height: 360px; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: clamp(30px, 6vw, 65px); border: 1px solid #b9d8c5; border-radius: 28px 28px 28px 8px; background: #eff9f2; text-align: center; box-shadow: 0 16px 55px rgba(50,60,53,.07); }
+.daily-complete > span { color: #27805a; font-size: 10px; font-weight: 850; letter-spacing: .16em; }
+.daily-complete h2 { max-width: 650px; margin: 16px 0 12px; font-family: Georgia, "Songti SC", serif; font-size: clamp(28px, 4vw, 42px); font-weight: 500; }
+.daily-complete p { max-width: 620px; margin: 0; color: #537065; line-height: 1.8; }
 
 .coming-stage { min-height: 390px; display: flex; flex-direction: column; justify-content: center; }
 .coming-stage > span { color: var(--teal); font-size: 11px; font-weight: 800; letter-spacing: .12em; }
