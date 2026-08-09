@@ -13,11 +13,14 @@ type Chunk = {
 
 type Unit = {
   id: string;
-  number: number;
+  category: string;
   name: string;
   section: string;
   chunks: Chunk[];
   sentences: Sentence[];
+  sourceUrl?: string;
+  dialogueSummary?: DialogueTurn[];
+  scenario: Scenario;
 };
 
 type Book = {
@@ -32,13 +35,28 @@ type ActivityTab = "learn" | "quiz" | "build";
 
 type ActivityPicker = {
   activity: ActivityTab;
-  step: "book" | "unit";
+  step: "book" | "category" | "unit";
   bookId: string;
+  category: string;
 };
 
 type Sentence = {
   chinese: string;
   parts: string[];
+};
+
+type DialogueTurn = {
+  speaker: string;
+  text: string;
+  highlights: string[];
+};
+
+type Scenario = {
+  label: string;
+  question: string;
+  prompt: string;
+  placeholder: string;
+  reference: string;
 };
 
 type DailyModeProgress = {
@@ -215,6 +233,152 @@ const unit2Chunks: Chunk[] = [
   },
 ];
 
+const footballIdiomsChunks: Chunk[] = [
+  {
+    id: 101,
+    english: "kick an idea around",
+    chinese: "反复考虑、与人讨论一个想法",
+    note: "表示暂时讨论和考虑，还没有正式作出决定。",
+    example: "We’ve been kicking the expansion idea around for a few weeks.",
+  },
+  {
+    id: 102,
+    english: "come out of left field",
+    chinese: "突然出现，出人意料",
+    note: "源自棒球，常形容消息、决定或提议令人意外。",
+    example: "The director’s resignation came out of left field.",
+  },
+  {
+    id: 103,
+    english: "play it safe",
+    chinese: "采取保守做法，避免冒险",
+    note: "强调选择风险较低、变化较小的方案。",
+    example: "We decided to play it safe and keep the original launch date.",
+  },
+  {
+    id: 104,
+    english: "sit on the sidelines",
+    chinese: "处于边缘位置，不积极参与",
+    note: "也可以说 stay 或 stand on the sidelines。",
+    example: "I don’t want to sit on the sidelines while others lead the project.",
+  },
+  {
+    id: 105,
+    english: "kick something into touch",
+    chinese: "停止或取消某个方案",
+    note: "偏英式表达；在美式英语环境中可能不够常见。",
+    example: "The proposal was too costly, so management kicked it into touch.",
+  },
+  {
+    id: 106,
+    english: "be in the same league as somebody",
+    chinese: "与某人处于同一水平",
+    note: "常用于比较个人、团队或公司的能力与实力。",
+    example: "Our small agency isn’t yet in the same league as the market leaders.",
+    audioText: "be in the same league as someone",
+  },
+  {
+    id: 107,
+    english: "be second division",
+    chinese: "属于二流水平，不是最优秀的",
+    note: "带有负面评价，使用时要注意语气。",
+    example: "The firm may be small, but it is certainly not second division.",
+  },
+  {
+    id: 108,
+    english: "move the goalposts",
+    chinese: "随意改变要求或成功标准",
+    note: "常用于批评对方在过程中不断改变规则或目标。",
+    example: "The client keeps moving the goalposts by adding new requirements.",
+  },
+  {
+    id: 109,
+    english: "a level playing field",
+    chinese: "公平竞争的环境",
+    note: "表示所有参与者拥有相近的信息、机会和规则条件。",
+    example: "Clear evaluation criteria will create a level playing field.",
+  },
+  {
+    id: 110,
+    english: "know the score",
+    chinese: "了解真实情况，知道内情",
+    note: "表示清楚实际规则、风险或事情的真相。",
+    example: "Ask Maya about the negotiations—she knows the score.",
+  },
+  {
+    id: 111,
+    english: "carry the ball",
+    chinese: "承担责任并把事情推进完成",
+    note: "在商务语境中强调带头负责、确保任务落实。",
+    example: "Daniel can carry the ball while the manager is away.",
+  },
+];
+
+const footballIdiomsSentences: Sentence[] = [
+  {
+    chinese: "我们已经讨论这个扩张想法几个星期了。",
+    parts: ["We’ve been", "kicking the expansion idea around", "for", "a few weeks."],
+  },
+  {
+    chinese: "我不想采取保守做法，最后只能当旁观者。",
+    parts: ["I don’t want to", "play it safe", "and end up", "sitting on the sidelines."],
+  },
+  {
+    chinese: "我们还没有达到行业领先企业的水平。",
+    parts: ["We aren’t yet", "in the same league as", "the leaders", "in our industry."],
+  },
+  {
+    chinese: "客户不断改变要求，使竞争变得不公平。",
+    parts: ["The client keeps", "moving the goalposts", "so it isn’t", "a level playing field."],
+  },
+  {
+    chinese: "她了解实际情况，也能负责推进这个项目。",
+    parts: ["She knows the score", "and", "can carry the ball", "on this project."],
+  },
+  {
+    chinese: "这个决定完全出乎我们的意料。",
+    parts: ["The decision", "came", "out of left field", "for all of us."],
+  },
+];
+
+const footballDialogueSummary: DialogueTurn[] = [
+  {
+    speaker: "Karl",
+    text: "I’ve been kicking an idea around: I may apply for a management role in the Sydney office.",
+    highlights: ["kicking an idea around"],
+  },
+  {
+    speaker: "Marilyn",
+    text: "That comes out of left field. What made you consider such a big change?",
+    highlights: ["comes out of left field"],
+  },
+  {
+    speaker: "Karl",
+    text: "I don’t want to play it safe and spend my career sitting on the sidelines.",
+    highlights: ["play it safe", "sitting on the sidelines"],
+  },
+  {
+    speaker: "Karl",
+    text: "Still, I’m not sure I’m in the same league as the other candidates.",
+    highlights: ["in the same league"],
+  },
+  {
+    speaker: "Marilyn",
+    text: "The Sydney team is strong, but managers there sometimes move the goalposts.",
+    highlights: ["move the goalposts"],
+  },
+  {
+    speaker: "Karl",
+    text: "That makes it difficult to compete on a level playing field.",
+    highlights: ["a level playing field"],
+  },
+  {
+    speaker: "Marilyn",
+    text: "You know the score, and you’ve shown that you can carry the ball. I think you should apply.",
+    highlights: ["know the score", "carry the ball"],
+  },
+];
+
 function normalizeName(value: string) {
   return value.trim().toLocaleLowerCase().replace(/\s+/g, " ");
 }
@@ -231,7 +395,12 @@ function assertUniqueNames<T>(items: T[], getName: (item: T) => string, level: s
 function defineLibrary(books: Book[]) {
   assertUniqueNames(books, (book) => book.name, "书籍");
   for (const book of books) {
-    assertUniqueNames(book.units, (unit) => unit.name, `书籍“${book.name}”下的 Unit`);
+    const categories = [...new Set(book.units.map((unit) => unit.category))];
+    assertUniqueNames(categories, (category) => category, `书籍“${book.name}”下的分类`);
+    for (const category of categories) {
+      const lessons = book.units.filter((unit) => normalizeName(unit.category) === normalizeName(category));
+      assertUniqueNames(lessons, (unit) => unit.name, `分类“${category}”下的课程`);
+    }
   }
   return books;
 }
@@ -243,11 +412,41 @@ const contentLibrary = defineLibrary([
     units: [
       {
         id: "unit-2-ways-of-working",
-        number: 2,
+        category: "Unit 2",
         name: "Ways of Working",
         section: "Working hours",
         chunks: unit2Chunks,
         sentences: unit2Sentences,
+        scenario: {
+          label: "BEC SPEAKING · 情境输出",
+          question: "What kind of working hours do you prefer?",
+          prompt: "尝试使用 prefer flexitime、organize my schedule 和 work-life balance。",
+          placeholder: "I prefer flexitime because...",
+          reference: "I prefer flexitime because it allows me to organize my schedule more efficiently and achieve a better work-life balance.",
+        },
+      },
+    ],
+  },
+  {
+    id: "business-vocabulary-pod",
+    name: "Business Vocabulary Pod",
+    units: [
+      {
+        id: "vocabulary-football-idioms",
+        category: "Vocabulary",
+        name: "Football Idioms",
+        section: "Business idioms",
+        chunks: footballIdiomsChunks,
+        sentences: footballIdiomsSentences,
+        sourceUrl: "https://www.businessenglishpod.com/2026/06/07/bep-163c-football-idioms-1/",
+        dialogueSummary: footballDialogueSummary,
+        scenario: {
+          label: "CAREER MOVE · 情境输出",
+          question: "Would you apply for a management role in another office?",
+          prompt: "说明你为什么想申请、担心什么，以及新的竞争环境是否公平。",
+          placeholder: "I’ve been kicking the idea around...",
+          reference: "I’ve been kicking the idea around because I don’t want to play it safe and stay on the sidelines. I may not be in the same league as every candidate, but I know the score and I’m ready to carry the ball.",
+        },
       },
     ],
   },
@@ -265,6 +464,14 @@ const activityNames: Record<ActivityTab, string> = {
 
 function chunkAudioText(chunk: Chunk) {
   return chunk.audioText ?? chunk.english;
+}
+
+function categoriesFor(book: Book) {
+  return [...new Set(book.units.map((unit) => unit.category))];
+}
+
+function escapeRegExp(value: string) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 function normalize(value: string) {
@@ -320,7 +527,8 @@ export default function Home() {
   const [tab, setTab] = useState<"learn" | "quiz" | "build" | "manage">("learn");
   const [activeBookId, setActiveBookId] = useState(defaultBook.id);
   const [activeUnitId, setActiveUnitId] = useState(defaultUnit.id);
-  const [libraryPicker, setLibraryPicker] = useState<"book" | "unit" | null>(null);
+  const [libraryPicker, setLibraryPicker] = useState<"book" | "category" | "unit" | null>(null);
+  const [libraryCategory, setLibraryCategory] = useState(defaultUnit.category);
   const [activityPicker, setActivityPicker] = useState<ActivityPicker | null>(null);
   const activeBook = contentLibrary.find((book) => book.id === activeBookId) ?? defaultBook;
   const activeUnit = activeBook.units.find((unit) => unit.id === activeUnitId) ?? activeBook.units[0];
@@ -337,6 +545,7 @@ export default function Home() {
   const [showReference, setShowReference] = useState(false);
   const [speakingText, setSpeakingText] = useState<string | null>(null);
   const [speechError, setSpeechError] = useState(false);
+  const [showDialogue, setShowDialogue] = useState(false);
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
@@ -514,11 +723,18 @@ export default function Home() {
     setSelectedParts([]);
     setSentenceFeedback(null);
     setSpeakingText(null);
+    setShowDialogue(false);
   }
 
   function chooseBook(book: Book) {
     setActiveBookId(book.id);
     loadUnit(book.units[0]);
+    setLibraryCategory(book.units[0].category);
+    setLibraryPicker("category");
+  }
+
+  function chooseCategory(category: string) {
+    setLibraryCategory(category);
     setLibraryPicker("unit");
   }
 
@@ -529,11 +745,15 @@ export default function Home() {
 
   function beginActivity(activity: ActivityTab) {
     setLibraryPicker(null);
-    setActivityPicker({ activity, step: "book", bookId: activeBook.id });
+    setActivityPicker({ activity, step: "book", bookId: activeBook.id, category: activeUnit.category });
   }
 
   function chooseActivityBook(book: Book) {
-    setActivityPicker((current) => current ? { ...current, step: "unit", bookId: book.id } : current);
+    setActivityPicker((current) => current ? { ...current, step: "category", bookId: book.id, category: categoriesFor(book)[0] } : current);
+  }
+
+  function chooseActivityCategory(category: string) {
+    setActivityPicker((current) => current ? { ...current, step: "unit", category } : current);
   }
 
   function chooseActivityUnit(unit: Unit) {
@@ -546,7 +766,14 @@ export default function Home() {
   }
 
   const pickerBook = contentLibrary.find((book) => book.id === activityPicker?.bookId) ?? activeBook;
+  const pickerUnits = pickerBook.units.filter((unit) => normalizeName(unit.category) === normalizeName(activityPicker?.category ?? ""));
   const highlightedTab = activityPicker?.activity ?? tab;
+
+  function renderDialogueText(turn: DialogueTurn) {
+    const pattern = new RegExp(`(${turn.highlights.map(escapeRegExp).join("|")})`, "gi");
+    const highlighted = new Set(turn.highlights.map((item) => item.toLowerCase()));
+    return turn.text.split(pattern).map((part, index) => highlighted.has(part.toLowerCase()) ? <mark key={`${part}-${index}`}>{part}</mark> : part);
+  }
 
   return (
     <main className="app-shell">
@@ -581,7 +808,7 @@ export default function Home() {
           </nav>
 
           <div className="unit-card">
-            <span>UNIT {String(activeUnit.number).padStart(2, "0")}</span>
+            <span>{activeUnit.category.toUpperCase()}</span>
             <strong>{activeUnit.name}</strong>
             <div className="unit-progress"><i style={{ width: `${Math.max(8, (stats.mastered / chunks.length) * 100)}%` }} /></div>
             <small>{stats.mastered} / {chunks.length} 已掌握</small>
@@ -591,7 +818,7 @@ export default function Home() {
         <section className="content">
           <div className="hero-row">
             <div>
-              <p className="section-kicker">UNIT {String(activeUnit.number).padStart(2, "0")} · {activeUnit.section.toUpperCase()}</p>
+              <p className="section-kicker">{activeUnit.category.toUpperCase()} · {activeUnit.section.toUpperCase()}</p>
               {tab !== "learn" && (
                 <h1>{tab === "quiz" ? "看中文，完整想起英文意群。" : tab === "build" ? "把意群放进真正的句子里。" : "每张截图，都会变成可练习的内容。"}</h1>
               )}
@@ -738,16 +965,16 @@ export default function Home() {
 
               <section className="scenario-stage">
                 <div>
-                  <p className="section-kicker">BEC SPEAKING · 情境输出</p>
-                  <h2>What kind of working hours do you prefer?</h2>
-                  <p>尝试使用 <b>prefer flexitime</b>、<b>organize my schedule</b> 和 <b>work-life balance</b>。</p>
+                  <p className="section-kicker">{activeUnit.scenario.label}</p>
+                  <h2>{activeUnit.scenario.question}</h2>
+                  <p>{activeUnit.scenario.prompt}</p>
                 </div>
-                <textarea value={scenarioAnswer} onChange={(event) => setScenarioAnswer(event.target.value)} placeholder="I prefer flexitime because..." aria-label="情境输出答案" />
+                <textarea value={scenarioAnswer} onChange={(event) => setScenarioAnswer(event.target.value)} placeholder={activeUnit.scenario.placeholder} aria-label="情境输出答案" />
                 <div className="scenario-footer">
                   <span>{scenarioAnswer.trim() ? scenarioAnswer.trim().split(/\s+/).length : 0} words</span>
                   <button className="ghost-button" onClick={() => setShowReference((value) => !value)}>{showReference ? "隐藏参考" : "查看参考"}</button>
                 </div>
-                {showReference && <p className="reference-answer">I prefer flexitime because it allows me to organize my schedule more efficiently and achieve a better work-life balance.</p>}
+                {showReference && <p className="reference-answer">{activeUnit.scenario.reference}</p>}
               </section>
             </div>
           )}
@@ -758,38 +985,48 @@ export default function Home() {
                 <div className="library-intro">
                   <span>SCREENSHOT TO PRACTICE</span>
                   <h2>截图交给我，整理和上传也交给我。</h2>
-                  <p>内容按“书籍 → Unit → 意群”分层管理。发布时会检查重复书名和同一本书下的重复 Unit 名；英文意群允许重复出现。</p>
+                  <p>内容按“书籍 → 分类 → 课程 → 意群”分层管理。发布时会检查各级名称；英文意群允许重复出现。</p>
                 </div>
                 <div className="library-path" aria-label="内容层级">
                   <button type="button" className="hierarchy-link" onClick={() => setLibraryPicker(libraryPicker === "book" ? null : "book")} aria-expanded={libraryPicker === "book"}>
                     {activeBook.name}<span aria-hidden="true">⌄</span>
                   </button>
                   <b aria-hidden="true">›</b>
-                  <button type="button" className="hierarchy-link" onClick={() => setLibraryPicker(libraryPicker === "unit" ? null : "unit")} aria-expanded={libraryPicker === "unit"}>
-                    Unit {activeUnit.number}<span aria-hidden="true">⌄</span>
+                  <button type="button" className="hierarchy-link" onClick={() => setLibraryPicker(libraryPicker === "category" ? null : "category")} aria-expanded={libraryPicker === "category"}>
+                    {activeUnit.category}<span aria-hidden="true">⌄</span>
                   </button>
                   <b aria-hidden="true">›</b>
-                  <button type="button" className="hierarchy-link current" onClick={() => setLibraryPicker(libraryPicker === "unit" ? null : "unit")} aria-expanded={libraryPicker === "unit"}>
+                  <button type="button" className="hierarchy-link current" onClick={() => { setLibraryCategory(activeUnit.category); setLibraryPicker(libraryPicker === "unit" ? null : "unit"); }} aria-expanded={libraryPicker === "unit"}>
                     {activeUnit.name}<span aria-hidden="true">⌄</span>
                   </button>
                 </div>
                 {libraryPicker && (
                   <div className="hierarchy-picker" aria-live="polite">
                     <div className="picker-heading">
-                      <span>{libraryPicker === "book" ? "选择书籍" : `选择 ${activeBook.name} 的 Unit`}</span>
+                      <span>{libraryPicker === "book" ? "选择书籍" : libraryPicker === "category" ? `选择 ${activeBook.name} 的分类` : `选择 ${libraryCategory} 下的课程`}</span>
                       <button type="button" onClick={() => setLibraryPicker(null)} aria-label="关闭选择器">×</button>
                     </div>
                     <div className="picker-options">
                       {libraryPicker === "book" ? contentLibrary.map((book) => (
                         <button type="button" key={book.id} className={book.id === activeBook.id ? "active" : ""} onClick={() => chooseBook(book)}>
-                          <span>BOOK</span><strong>{book.name}</strong><small>{book.units.length} 个 Unit</small>
+                          <span>BOOK</span><strong>{book.name}</strong><small>{categoriesFor(book).length} 个分类</small>
                         </button>
-                      )) : activeBook.units.map((unit) => (
+                      )) : libraryPicker === "category" ? categoriesFor(activeBook).map((category) => (
+                        <button type="button" key={category} className={category === activeUnit.category ? "active" : ""} onClick={() => chooseCategory(category)}>
+                          <span>CATEGORY</span><strong>{category}</strong><small>{activeBook.units.filter((unit) => unit.category === category).length} 个课程</small>
+                        </button>
+                      )) : activeBook.units.filter((unit) => normalizeName(unit.category) === normalizeName(libraryCategory)).map((unit) => (
                         <button type="button" key={unit.id} className={unit.id === activeUnit.id ? "active" : ""} onClick={() => chooseUnit(unit)}>
-                          <span>UNIT {String(unit.number).padStart(2, "0")}</span><strong>{unit.name}</strong><small>{unit.chunks.length} 个意群</small>
+                          <span>LESSON</span><strong>{unit.name}</strong><small>{unit.chunks.length} 个意群</small>
                         </button>
                       ))}
                     </div>
+                  </div>
+                )}
+                {activeUnit.sourceUrl && (
+                  <div className="lesson-resources">
+                    <a href={activeUnit.sourceUrl} target="_blank" rel="noreferrer">查看原始课程 <span>↗</span></a>
+                    {activeUnit.dialogueSummary && <button type="button" onClick={() => setShowDialogue(true)}>打开对话版摘要 <span>→</span></button>}
                   </div>
                 )}
                 <div className="library-heading"><span>{activeUnit.section.toUpperCase()}</span><strong>{chunks.length} 个意群</strong></div>
@@ -820,15 +1057,16 @@ export default function Home() {
             <div className="activity-picker-header">
               <div>
                 <span>开始 · {activityNames[activityPicker.activity]}</span>
-                <h2 id="activity-picker-title">{activityPicker.step === "book" ? "先选择一本书" : "再选择一个 Unit"}</h2>
+                <h2 id="activity-picker-title">{activityPicker.step === "book" ? "先选择一本书" : activityPicker.step === "category" ? "再选择一个分类" : "最后选择一门课程"}</h2>
               </div>
               <button type="button" onClick={() => setActivityPicker(null)} aria-label="关闭分级选择">×</button>
             </div>
 
             <ol className="activity-picker-steps" aria-label="训练选择步骤">
               <li className={activityPicker.step === "book" ? "active" : "done"}><b>1</b><span>选择书籍</span></li>
-              <li className={activityPicker.step === "unit" ? "active" : ""}><b>2</b><span>选择 Unit</span></li>
-              <li><b>3</b><span>开始训练</span></li>
+              <li className={activityPicker.step === "category" ? "active" : activityPicker.step === "unit" ? "done" : ""}><b>2</b><span>选择分类</span></li>
+              <li className={activityPicker.step === "unit" ? "active" : ""}><b>3</b><span>选择课程</span></li>
+              <li><b>4</b><span>开始训练</span></li>
             </ol>
 
             {activityPicker.step === "book" ? (
@@ -837,11 +1075,11 @@ export default function Home() {
                   <button type="button" key={book.id} onClick={() => chooseActivityBook(book)}>
                     <span>BOOK</span>
                     <strong>{book.name}</strong>
-                    <small>{book.units.length} 个 Unit <i>→</i></small>
+                    <small>{categoriesFor(book).length} 个分类 <i>→</i></small>
                   </button>
                 ))}
               </div>
-            ) : (
+            ) : activityPicker.step === "category" ? (
               <>
                 <button
                   type="button"
@@ -852,15 +1090,69 @@ export default function Home() {
                 </button>
                 <p className="activity-picker-book">当前书籍：<strong>{pickerBook.name}</strong></p>
                 <div className="activity-picker-options">
-                  {pickerBook.units.map((unit) => (
+                  {categoriesFor(pickerBook).map((category) => (
+                    <button type="button" key={category} onClick={() => chooseActivityCategory(category)}>
+                      <span>CATEGORY</span>
+                      <strong>{category}</strong>
+                      <small>{pickerBook.units.filter((unit) => unit.category === category).length} 个课程 <i>→</i></small>
+                    </button>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  className="activity-picker-back"
+                  onClick={() => setActivityPicker((current) => current ? { ...current, step: "category" } : current)}
+                >
+                  ← 返回选择分类
+                </button>
+                <p className="activity-picker-book">当前路径：<strong>{pickerBook.name} › {activityPicker.category}</strong></p>
+                <div className="activity-picker-options">
+                  {pickerUnits.map((unit) => (
                     <button type="button" key={unit.id} onClick={() => chooseActivityUnit(unit)}>
-                      <span>UNIT {String(unit.number).padStart(2, "0")}</span>
+                      <span>LESSON</span>
                       <strong>{unit.name}</strong>
                       <small>{unit.chunks.length} 个意群 <i>→</i></small>
                     </button>
                   ))}
                 </div>
               </>
+            )}
+          </section>
+        </div>
+      )}
+
+      {showDialogue && activeUnit.dialogueSummary && (
+        <div className="dialogue-overlay" role="presentation" onClick={() => setShowDialogue(false)}>
+          <section
+            className="dialogue-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="dialogue-title"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="dialogue-header">
+              <div>
+                <span>DIALOGUE SUMMARY</span>
+                <h2 id="dialogue-title">{activeUnit.name}</h2>
+              </div>
+              <button type="button" onClick={() => setShowDialogue(false)} aria-label="关闭对话摘要">×</button>
+            </div>
+            <p className="dialogue-note">根据课程情境重新编写，重点意群已标出；这不是课程原文的逐字转载。</p>
+            <div className="dialogue-turns">
+              {activeUnit.dialogueSummary.map((turn, index) => (
+                <article className={`dialogue-turn ${turn.speaker.toLowerCase()}`} key={`${turn.speaker}-${index}`}>
+                  <strong>{turn.speaker}</strong>
+                  <p>{renderDialogueText(turn)}</p>
+                </article>
+              ))}
+            </div>
+            {activeUnit.sourceUrl && (
+              <a className="dialogue-source" href={activeUnit.sourceUrl} target="_blank" rel="noreferrer">
+                查看原始课程 <span>↗</span>
+              </a>
             )}
           </section>
         </div>

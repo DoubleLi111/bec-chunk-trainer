@@ -205,6 +205,9 @@ button { color: inherit; }
 .picker-options > button:hover, .picker-options > button.active { border-color: var(--teal); background: #edf5f1; }
 .picker-options span, .picker-options small { color: var(--muted); font-size: 9px; letter-spacing: .1em; }
 .picker-options strong { font-family: Georgia, serif; font-size: 16px; }
+.lesson-resources { display: flex; flex-wrap: wrap; gap: 9px; margin: 2px 0 22px; padding: 14px; border: 1px solid #d8e3de; border-radius: 14px; background: #f0f6f2; }
+.lesson-resources a, .lesson-resources button { display: inline-flex; align-items: center; justify-content: space-between; gap: 14px; border: 1px solid #b9cec5; border-radius: 999px; padding: 10px 14px; background: var(--card); color: var(--teal); text-decoration: none; cursor: pointer; font-size: 11px; font-weight: 800; }
+.lesson-resources a:hover, .lesson-resources button:hover { border-color: var(--teal); background: var(--mint); }
 .library-heading { display: flex; justify-content: space-between; align-items: baseline; padding: 4px 0 15px; }
 .library-heading strong { font-family: Georgia, serif; }
 .library-list article { display: grid; grid-template-columns: 32px 1fr auto; gap: 12px; align-items: center; border-top: 1px solid #e3e5e0; padding: 16px 0; }
@@ -244,7 +247,7 @@ button { color: inherit; }
 .activity-picker-header h2 { margin: 8px 0 0; font-family: Georgia, "Songti SC", serif; font-size: clamp(27px, 4vw, 38px); font-weight: 500; }
 .activity-picker-header > button { flex: 0 0 auto; width: 38px; height: 38px; border: 1px solid var(--line); border-radius: 50%; background: var(--card); color: var(--muted); cursor: pointer; font-size: 23px; line-height: 1; }
 .activity-picker-header > button:hover { border-color: var(--teal); color: var(--teal); }
-.activity-picker-steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 30px 0; padding: 0; list-style: none; }
+.activity-picker-steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 30px 0; padding: 0; list-style: none; }
 .activity-picker-steps li { position: relative; display: flex; align-items: center; gap: 8px; min-width: 0; color: #9ba6a3; font-size: 11px; font-weight: 750; }
 .activity-picker-steps li:not(:last-child)::after { content: ""; position: absolute; left: calc(100% - 5px); width: 10px; height: 1px; background: #cbd2ce; }
 .activity-picker-steps b { display: grid; place-items: center; flex: 0 0 auto; width: 28px; height: 28px; border: 1px solid #cbd2ce; border-radius: 50%; font-size: 10px; }
@@ -262,6 +265,41 @@ button { color: inherit; }
 .activity-picker-back { border: 0; background: transparent; padding: 0; color: var(--teal); cursor: pointer; font-weight: 750; }
 .activity-picker-book { margin: 14px 0 18px; color: var(--muted); font-size: 12px; }
 .activity-picker-book strong { color: var(--ink); }
+
+.dialogue-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  overflow-y: auto;
+  background: rgba(19, 42, 49, .56);
+  backdrop-filter: blur(8px);
+}
+.dialogue-dialog {
+  width: min(760px, 100%);
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
+  border: 1px solid rgba(255, 255, 255, .75);
+  border-radius: 28px 28px 28px 8px;
+  padding: clamp(24px, 4vw, 42px);
+  background: var(--paper);
+  box-shadow: 0 28px 90px rgba(10, 28, 33, .32);
+}
+.dialogue-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; }
+.dialogue-header span { color: var(--teal); font-size: 10px; font-weight: 850; letter-spacing: .16em; }
+.dialogue-header h2 { margin: 8px 0 0; font-family: Georgia, "Songti SC", serif; font-size: clamp(28px, 4vw, 40px); font-weight: 500; }
+.dialogue-header > button { flex: 0 0 auto; width: 38px; height: 38px; border: 1px solid var(--line); border-radius: 50%; background: var(--card); color: var(--muted); cursor: pointer; font-size: 23px; line-height: 1; }
+.dialogue-header > button:hover { border-color: var(--teal); color: var(--teal); }
+.dialogue-note { margin: 17px 0 25px; color: var(--muted); font-size: 12px; line-height: 1.7; }
+.dialogue-turns { display: grid; gap: 12px; }
+.dialogue-turn { width: min(86%, 610px); border: 1px solid #d4dbd7; border-radius: 18px 18px 18px 5px; padding: 15px 18px; background: var(--card); }
+.dialogue-turn.marilyn { margin-left: auto; border-radius: 18px 18px 5px 18px; background: #e7f3ed; }
+.dialogue-turn > strong { color: var(--teal); font-size: 10px; font-weight: 850; letter-spacing: .1em; text-transform: uppercase; }
+.dialogue-turn p { margin: 7px 0 0; font-family: Georgia, serif; font-size: 16px; line-height: 1.65; }
+.dialogue-turn mark { border-radius: 4px; padding: 1px 3px; background: #f6d77e; color: var(--ink); }
+.dialogue-source { display: inline-flex; gap: 12px; margin-top: 24px; border-bottom: 1px solid currentColor; padding-bottom: 3px; color: var(--teal); text-decoration: none; font-size: 12px; font-weight: 800; }
 
 @media (max-width: 780px) {
   .topbar { height: 70px; padding: 0 18px; }
@@ -301,6 +339,8 @@ button { color: inherit; }
   .activity-picker-overlay { place-items: start center; padding: 16px; }
   .activity-picker-dialog { max-height: none; margin: 14px 0; border-radius: 22px 22px 22px 7px; padding: 24px; }
   .activity-picker-options { grid-template-columns: 1fr; }
+  .dialogue-overlay { place-items: start center; padding: 16px; }
+  .dialogue-dialog { max-height: none; margin: 14px 0; border-radius: 22px 22px 22px 7px; padding: 24px; }
 }
 
 @media (max-width: 420px) {
@@ -315,6 +355,8 @@ button { color: inherit; }
   .card-actions, .build-actions { display: grid; grid-template-columns: 1fr; }
   .library-path b { display: none; }
   .hierarchy-link { width: 100%; justify-content: space-between; padding: 8px; background: #f0f2ed; }
+  .lesson-resources { display: grid; padding: 11px; }
+  .lesson-resources a, .lesson-resources button { width: 100%; }
   .library-heading { gap: 12px; }
   .activity-picker-overlay { padding: 10px; }
   .activity-picker-dialog { margin: 6px 0; padding: 20px 16px; }
@@ -322,4 +364,8 @@ button { color: inherit; }
   .activity-picker-steps li { display: grid; gap: 5px; justify-items: center; text-align: center; font-size: 9px; }
   .activity-picker-steps li:not(:last-child)::after { top: 14px; left: calc(100% - 7px); width: 14px; }
   .activity-picker-options > button { min-height: 112px; padding: 17px; }
+  .dialogue-overlay { padding: 10px; }
+  .dialogue-dialog { margin: 6px 0; padding: 20px 16px; }
+  .dialogue-turn { width: 94%; padding: 14px; }
+  .dialogue-turn p { font-size: 15px; }
 }
