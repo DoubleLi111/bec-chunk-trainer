@@ -469,11 +469,10 @@ export default function Home() {
   return (
     <main className="app-shell">
       <header className="topbar">
-        <a className="brand" href="#top" aria-label="BEC 意群训练首页">
-          <span className="brand-mark">B</span>
+        <a className="brand" href="#top" aria-label="Doris Learning Dictionary 首页">
+          <span className="brand-mark">D</span>
           <span>
-            <strong>BEC Chunks</strong>
-            <small>意群训练室</small>
+            <strong>Doris Learning Dictionary</strong>
           </span>
         </a>
         <div className="streak" aria-label="今日学习状态">
@@ -511,7 +510,9 @@ export default function Home() {
           <div className="hero-row">
             <div>
               <p className="section-kicker">UNIT {String(activeUnit.number).padStart(2, "0")} · {activeUnit.section.toUpperCase()}</p>
-              <h1>{tab === "learn" ? "先记意群，再让表达自然发生。" : tab === "quiz" ? "看中文，完整想起英文意群。" : tab === "build" ? "把意群放进真正的句子里。" : "每张截图，都会变成可练习的内容。"}</h1>
+              {tab !== "learn" && (
+                <h1>{tab === "quiz" ? "看中文，完整想起英文意群。" : tab === "build" ? "把意群放进真正的句子里。" : "每张截图，都会变成可练习的内容。"}</h1>
+              )}
             </div>
             <div className="metric">
               <strong>{accuracy}%</strong>
