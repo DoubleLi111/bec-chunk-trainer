@@ -28,6 +28,14 @@ type Book = {
 
 type Progress = Record<number, { correct: number; wrong: number }>;
 
+type ActivityTab = "learn" | "quiz" | "build";
+
+type ActivityPicker = {
+  activity: ActivityTab;
+  step: "book" | "unit";
+  bookId: string;
+};
+
 type Sentence = {
   chinese: string;
   parts: string[];
@@ -236,6 +244,12 @@ const defaultBook = contentLibrary[0];
 const defaultUnit = defaultBook.units[0];
 const starterChunks = defaultUnit.chunks;
 
+const activityNames: Record<ActivityTab, string> = {
+  learn: "意群卡片",
+  quiz: "快速测验",
+  build: "组装句子",
+};
+
 function chunkAudioText(chunk: Chunk) {
   return chunk.audioText ?? chunk.english;
 }
@@ -254,6 +268,7 @@ export default function Home() {
   const [activeBookId, setActiveBookId] = useState(defaultBook.id);
   const [activeUnitId, setActiveUnitId] = useState(defaultUnit.id);
   const [libraryPicker, setLibraryPicker] = useState<"book" | "unit" | null>(null);
+  const [activityPicker, setActivityPicker] = useState<ActivityPicker | null>(null);
   const activeBook = contentLibrary.find((book) => book.id === activeBookId) ?? defaultBook;
   const activeUnit = activeBook.units.find((unit) => unit.id === activeUnitId) ?? activeBook.units[0];
   const [chunks, setChunks] = useState<Chunk[]>(starterChunks);
@@ -430,6 +445,27 @@ export default function Home() {
     setLibraryPicker(null);
   }
 
+  function beginActivity(activity: ActivityTab) {
+    setLibraryPicker(null);
+    setActivityPicker({ activity, step: "book", bookId: activeBook.id });
+  }
+
+  function chooseActivityBook(book: Book) {
+    setActivityPicker((current) => current ? { ...current, step: "unit", bookId: book.id } : current);
+  }
+
+  function chooseActivityUnit(unit: Unit) {
+    if (!activityPicker) return;
+    const book = contentLibrary.find((item) => item.id === activityPicker.bookId) ?? defaultBook;
+    setActiveBookId(book.id);
+    loadUnit(unit);
+    setTab(activityPicker.activity);
+    setActivityPicker(null);
+  }
+
+  const pickerBook = contentLibrary.find((book) => book.id === activityPicker?.bookId) ?? activeBook;
+  const highlightedTab = activityPicker?.activity ?? tab;
+
   return (
     <main className="app-shell">
       <header className="topbar">
@@ -449,16 +485,16 @@ export default function Home() {
         <aside className="sidebar">
           <p className="eyebrow">{activeBook.name.toUpperCase()}</p>
           <nav aria-label="学习功能">
-            <button className={tab === "learn" ? "active" : ""} onClick={() => setTab("learn")}>
+            <button className={highlightedTab === "learn" ? "active" : ""} onClick={() => beginActivity("learn")}>
               <span>01</span> 意群卡片
             </button>
-            <button className={tab === "quiz" ? "active" : ""} onClick={() => setTab("quiz")}>
+            <button className={highlightedTab === "quiz" ? "active" : ""} onClick={() => beginActivity("quiz")}>
               <span>02</span> 快速测验
             </button>
-            <button className={tab === "build" ? "active" : ""} onClick={() => setTab("build")}>
+            <button className={highlightedTab === "build" ? "active" : ""} onClick={() => beginActivity("build")}>
               <span>03</span> 组装句子
             </button>
-            <button className={tab === "manage" ? "active" : ""} onClick={() => setTab("manage")}>
+            <button className={tab === "manage" && !activityPicker ? "active" : ""} onClick={() => { setActivityPicker(null); setTab("manage"); }}>
               <span>04</span> 内容清单
             </button>
           </nav>
@@ -674,6 +710,64 @@ export default function Home() {
           )}
         </section>
       </div>
+
+      {activityPicker && (
+        <div className="activity-picker-overlay" role="presentation" onClick={() => setActivityPicker(null)}>
+          <section
+            className="activity-picker-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="activity-picker-title"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="activity-picker-header">
+              <div>
+                <span>开始 · {activityNames[activityPicker.activity]}</span>
+                <h2 id="activity-picker-title">{activityPicker.step === "book" ? "先选择一本书" : "再选择一个 Unit"}</h2>
+              </div>
+              <button type="button" onClick={() => setActivityPicker(null)} aria-label="关闭分级选择">×</button>
+            </div>
+
+            <ol className="activity-picker-steps" aria-label="训练选择步骤">
+              <li className={activityPicker.step === "book" ? "active" : "done"}><b>1</b><span>选择书籍</span></li>
+              <li className={activityPicker.step === "unit" ? "active" : ""}><b>2</b><span>选择 Unit</span></li>
+              <li><b>3</b><span>开始训练</span></li>
+            </ol>
+
+            {activityPicker.step === "book" ? (
+              <div className="activity-picker-options">
+                {contentLibrary.map((book) => (
+                  <button type="button" key={book.id} onClick={() => chooseActivityBook(book)}>
+                    <span>BOOK</span>
+                    <strong>{book.name}</strong>
+                    <small>{book.units.length} 个 Unit <i>→</i></small>
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  className="activity-picker-back"
+                  onClick={() => setActivityPicker((current) => current ? { ...current, step: "book" } : current)}
+                >
+                  ← 返回选择书籍
+                </button>
+                <p className="activity-picker-book">当前书籍：<strong>{pickerBook.name}</strong></p>
+                <div className="activity-picker-options">
+                  {pickerBook.units.map((unit) => (
+                    <button type="button" key={unit.id} onClick={() => chooseActivityUnit(unit)}>
+                      <span>UNIT {String(unit.number).padStart(2, "0")}</span>
+                      <strong>{unit.name}</strong>
+                      <small>{unit.chunks.length} 个意群 <i>→</i></small>
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+          </section>
+        </div>
+      )}
     </main>
   );
 }

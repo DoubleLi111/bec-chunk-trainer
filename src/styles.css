@@ -214,6 +214,51 @@ button { color: inherit; }
 .row-actions button:last-child { color: #9b5b4a; }
 .row-actions button:disabled { opacity: .3; cursor: not-allowed; }
 
+.activity-picker-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  overflow-y: auto;
+  background: rgba(19, 42, 49, .5);
+  backdrop-filter: blur(8px);
+}
+.activity-picker-dialog {
+  width: min(680px, 100%);
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
+  border: 1px solid rgba(255, 255, 255, .75);
+  border-radius: 28px 28px 28px 8px;
+  padding: clamp(24px, 4vw, 40px);
+  background: var(--paper);
+  box-shadow: 0 28px 90px rgba(10, 28, 33, .3);
+}
+.activity-picker-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; }
+.activity-picker-header span { color: var(--teal); font-size: 10px; font-weight: 800; letter-spacing: .14em; }
+.activity-picker-header h2 { margin: 8px 0 0; font-family: Georgia, "Songti SC", serif; font-size: clamp(27px, 4vw, 38px); font-weight: 500; }
+.activity-picker-header > button { flex: 0 0 auto; width: 38px; height: 38px; border: 1px solid var(--line); border-radius: 50%; background: var(--card); color: var(--muted); cursor: pointer; font-size: 23px; line-height: 1; }
+.activity-picker-header > button:hover { border-color: var(--teal); color: var(--teal); }
+.activity-picker-steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 30px 0; padding: 0; list-style: none; }
+.activity-picker-steps li { position: relative; display: flex; align-items: center; gap: 8px; min-width: 0; color: #9ba6a3; font-size: 11px; font-weight: 750; }
+.activity-picker-steps li:not(:last-child)::after { content: ""; position: absolute; left: calc(100% - 5px); width: 10px; height: 1px; background: #cbd2ce; }
+.activity-picker-steps b { display: grid; place-items: center; flex: 0 0 auto; width: 28px; height: 28px; border: 1px solid #cbd2ce; border-radius: 50%; font-size: 10px; }
+.activity-picker-steps li.active { color: var(--ink); }
+.activity-picker-steps li.active b { border-color: var(--ink); background: var(--ink); color: white; }
+.activity-picker-steps li.done { color: var(--teal); }
+.activity-picker-steps li.done b { border-color: var(--mint); background: var(--mint); color: var(--teal); }
+.activity-picker-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.activity-picker-options > button { display: grid; gap: 9px; min-height: 130px; border: 1px solid #d2d9d5; border-radius: 18px 18px 18px 5px; padding: 20px; background: var(--card); color: var(--ink); text-align: left; cursor: pointer; transition: .2s ease; }
+.activity-picker-options > button:hover { transform: translateY(-2px); border-color: var(--teal); background: #edf5f1; box-shadow: 0 10px 28px rgba(19, 42, 49, .08); }
+.activity-picker-options span { color: var(--teal); font-size: 9px; font-weight: 800; letter-spacing: .15em; }
+.activity-picker-options strong { font-family: Georgia, "Songti SC", serif; font-size: 20px; overflow-wrap: anywhere; }
+.activity-picker-options small { align-self: end; display: flex; justify-content: space-between; color: var(--muted); font-size: 11px; }
+.activity-picker-options i { color: var(--teal); font-style: normal; font-size: 15px; }
+.activity-picker-back { border: 0; background: transparent; padding: 0; color: var(--teal); cursor: pointer; font-weight: 750; }
+.activity-picker-book { margin: 14px 0 18px; color: var(--muted); font-size: 12px; }
+.activity-picker-book strong { color: var(--ink); }
+
 @media (max-width: 780px) {
   .topbar { height: 70px; padding: 0 18px; }
   .streak { padding: 8px 10px; font-size: 11px; }
@@ -249,6 +294,9 @@ button { color: inherit; }
   .list-audio { min-width: 42px; padding: 8px 9px; }
   .list-audio span { display: none; }
   .library-list { max-height: none; }
+  .activity-picker-overlay { place-items: start center; padding: 16px; }
+  .activity-picker-dialog { max-height: none; margin: 14px 0; border-radius: 22px 22px 22px 7px; padding: 24px; }
+  .activity-picker-options { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 420px) {
@@ -265,4 +313,10 @@ button { color: inherit; }
   .library-path b { display: none; }
   .hierarchy-link { width: 100%; justify-content: space-between; padding: 8px; background: #f0f2ed; }
   .library-heading { gap: 12px; }
+  .activity-picker-overlay { padding: 10px; }
+  .activity-picker-dialog { margin: 6px 0; padding: 20px 16px; }
+  .activity-picker-steps { gap: 4px; }
+  .activity-picker-steps li { display: grid; gap: 5px; justify-items: center; text-align: center; font-size: 9px; }
+  .activity-picker-steps li:not(:last-child)::after { top: 14px; left: calc(100% - 7px); width: 14px; }
+  .activity-picker-options > button { min-height: 112px; padding: 17px; }
 }
