@@ -17,6 +17,7 @@ type Unit = {
   name: string;
   section: string;
   chunks: Chunk[];
+  sentences: Sentence[];
 };
 
 type Book = {
@@ -32,7 +33,7 @@ type Sentence = {
   parts: string[];
 };
 
-const sentences: Sentence[] = [
+const unit2Sentences: Sentence[] = [
   {
     chinese: "这是一份工作时间固定的朝九晚五的工作。",
     parts: ["It’s", "a nine-to-five job", "with", "regular working hours."],
@@ -225,6 +226,7 @@ const contentLibrary = defineLibrary([
         name: "Ways of Working",
         section: "Working hours",
         chunks: unit2Chunks,
+        sentences: unit2Sentences,
       },
     ],
   },
@@ -314,7 +316,7 @@ export default function Home() {
   const quizPool = reviewWrong && wrongChunks.length ? wrongChunks : chunks;
   const currentCard = chunks[cardIndex % chunks.length] ?? starterChunks[0];
   const currentQuiz = quizPool[quizIndex % quizPool.length] ?? starterChunks[0];
-  const currentSentence = sentences[sentenceIndex];
+  const currentSentence = activeUnit.sentences[sentenceIndex];
   const accuracy = stats.attempts
     ? Math.round((stats.correct / stats.attempts) * 100)
     : 0;
@@ -397,7 +399,7 @@ export default function Home() {
   }
 
   function resetSentence(next = false) {
-    if (next) setSentenceIndex((value) => (value + 1) % sentences.length);
+    if (next) setSentenceIndex((value) => (value + 1) % activeUnit.sentences.length);
     setSelectedParts([]);
     setSentenceFeedback(null);
   }
@@ -566,7 +568,7 @@ export default function Home() {
             <div className="build-stack">
               <section className="build-stage" aria-live="polite">
                 <div className="stage-meta">
-                  <span>SENTENCE {String(sentenceIndex + 1).padStart(2, "0")} / {String(sentences.length).padStart(2, "0")}</span>
+                  <span>SENTENCE {String(sentenceIndex + 1).padStart(2, "0")} / {String(activeUnit.sentences.length).padStart(2, "0")}</span>
                   <span className="level-pill">意群组句</span>
                 </div>
                 <div className="sentence-prompt">
