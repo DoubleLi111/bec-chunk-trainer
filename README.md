@@ -9,13 +9,24 @@ npm install
 npm run dev
 ```
 
-## Cloudflare Pages
+## Cloudflare Worker + D1
 
-- Framework preset: `Vite`
-- Build command: `npm run build`
-- Build output directory: `dist`
-- Root directory: `/`
+同一个 Worker 提供 Vite 静态资源和 `/api` 服务。D1 保存登录会话与学习进度，浏览器保留本地副本并在登录后自动同步。
 
-Cloudflare Pages 连接本仓库后，每次推送到 `main` 都会自动构建并发布。
+部署前需要：
 
-当前发音使用浏览器自动生成的 `en-GB` 英式语音，不需要保存音频文件或运行后端服务。
+1. 创建名为 `doris-learning-dictionary` 的 D1 数据库，并把数据库 ID 写入 `wrangler.jsonc`。
+2. 将登录密码写入 Worker Secret（仓库中不能出现密码值）：
+
+```bash
+npx wrangler secret put ACCOUNT_PASSWORD
+```
+
+3. 初始化数据库并部署：
+
+```bash
+npm run d1:migrate:remote
+npm run deploy
+```
+
+账号通过 `LOGIN_USERNAME` 配置；密码只从 `ACCOUNT_PASSWORD` Secret 读取。当前发音仍使用浏览器自动生成的 `en-GB` 英式语音。

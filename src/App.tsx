@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 type Chunk = {
   id: number;
@@ -53,6 +53,14 @@ type DailyPracticeEntry = {
 };
 
 type DailyPractice = Record<string, DailyPracticeEntry>;
+
+type SavedState = {
+  chunks: Chunk[];
+  progress: Progress;
+  dailyPractice: DailyPractice;
+};
+
+type SyncStatus = "idle" | "syncing" | "synced" | "error";
 
 const unit2Sentences: Sentence[] = [
   {
@@ -316,6 +324,12 @@ function recordDailyResult(mode: DailyModeProgress, itemId: number, isCorrect: b
   return { pending, review, done };
 }
 
+function mergeStoredChunks(savedChunks: Chunk[]) {
+  const officialIds = new Set(starterChunks.map((chunk) => chunk.id));
+  const personalOnly = savedChunks.filter((chunk) => !officialIds.has(chunk.id));
+  return [...starterChunks, ...personalOnly];
+}
+
 export default function Home() {
   const [tab, setTab] = useState<"learn" | "quiz" | "build" | "manage">("learn");
   const [activeBookId, setActiveBookId] = useState(defaultBook.id);
@@ -338,6 +352,15 @@ export default function Home() {
   const [speakingText, setSpeakingText] = useState<string | null>(null);
   const [speechError, setSpeechError] = useState(false);
   const [hydrated, setHydrated] = useState(false);
+  const [authStatus, setAuthStatus] = useState<"checking" | "signed-out" | "signed-in">("checking");
+  const [sessionUser, setSessionUser] = useState<string | null>(null);
+  const [loginUsername, setLoginUsername] = useState("");
+  const [loginPassword, setLoginPassword] = useState("");
+  const [loginError, setLoginError] = useState("");
+  const [loggingIn, setLoggingIn] = useState(false);
+  const [syncReady, setSyncReady] = useState(false);
+  const [syncStatus, setSyncStatus] = useState<SyncStatus>("idle");
+  const authStarted = useRef(false);
 
   useEffect(() => {
     const savedChunks = window.localStorage.getItem("bec-chunks");
@@ -346,9 +369,7 @@ export default function Home() {
     if (savedChunks) {
       try {
         const personalChunks = JSON.parse(savedChunks) as Chunk[];
-        const officialIds = new Set(starterChunks.map((chunk) => chunk.id));
-        const personalOnly = personalChunks.filter((chunk) => !officialIds.has(chunk.id));
-        setChunks([...starterChunks, ...personalOnly]);
+        setChunks(mergeStoredChunks(personalChunks));
       } catch {
         setChunks(starterChunks);
       }
@@ -376,6 +397,54 @@ export default function Home() {
     window.localStorage.setItem("bec-progress", JSON.stringify(progress));
     window.localStorage.setItem("bec-daily-practice", JSON.stringify(dailyPractice));
   }, [chunks, progress, dailyPractice, hydrated]);
+
+  useEffect(() => {
+    if (!hydrated || authStarted.current) return;
+    authStarted.current = true;
+
+    void (async () => {
+      try {
+        const response = await fetch("/api/session", { credentials: "include" });
+        if (!response.ok) {
+          setAuthStatus("signed-out");
+          return;
+        }
+        const data = await response.json() as { username: string };
+        setSessionUser(data.username);
+        await hydrateFromServer();
+        setAuthStatus("signed-in");
+      } catch {
+        setAuthStatus("signed-out");
+      }
+    })();
+  }, [hydrated]);
+
+  useEffect(() => {
+    if (!hydrated || !sessionUser || !syncReady) return;
+
+    const controller = new AbortController();
+    const timer = window.setTimeout(async () => {
+      setSyncStatus("syncing");
+      try {
+        const response = await fetch("/api/progress", {
+          method: "PUT",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ state: { chunks, progress, dailyPractice } satisfies SavedState }),
+          signal: controller.signal,
+        });
+        if (!response.ok) throw new Error("sync failed");
+        setSyncStatus("synced");
+      } catch (error) {
+        if ((error as Error).name !== "AbortError") setSyncStatus("error");
+      }
+    }, 700);
+
+    return () => {
+      window.clearTimeout(timer);
+      controller.abort();
+    };
+  }, [chunks, progress, dailyPractice, hydrated, sessionUser, syncReady]);
 
   const stats = useMemo(() => {
     const attempts = Object.values(progress).reduce(
@@ -408,6 +477,67 @@ export default function Home() {
   const accuracy = stats.attempts
     ? Math.round((stats.correct / stats.attempts) * 100)
     : 0;
+
+  async function hydrateFromServer() {
+    setSyncReady(false);
+    setSyncStatus("syncing");
+    const response = await fetch("/api/progress", { credentials: "include" });
+    if (!response.ok) throw new Error("无法读取云端进度");
+    const data = await response.json() as { state: SavedState | null };
+
+    if (data.state) {
+      setChunks(mergeStoredChunks(Array.isArray(data.state.chunks) ? data.state.chunks : []));
+      setProgress(data.state.progress && typeof data.state.progress === "object" ? data.state.progress : {});
+      setDailyPractice(data.state.dailyPractice && typeof data.state.dailyPractice === "object" ? data.state.dailyPractice : {});
+    } else {
+      const seedResponse = await fetch("/api/progress", {
+        method: "PUT",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ state: { chunks, progress, dailyPractice } satisfies SavedState }),
+      });
+      if (!seedResponse.ok) throw new Error("无法初始化云端进度");
+    }
+
+    setSyncReady(true);
+    setSyncStatus("synced");
+  }
+
+  async function login(event: React.FormEvent) {
+    event.preventDefault();
+    if (!loginUsername.trim() || !loginPassword || loggingIn) return;
+    setLoggingIn(true);
+    setLoginError("");
+    try {
+      const response = await fetch("/api/login", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: loginUsername.trim(), password: loginPassword }),
+      });
+      if (!response.ok) {
+        const data = await response.json().catch(() => null) as { error?: string } | null;
+        throw new Error(data?.error ?? "账号或密码不正确");
+      }
+      const data = await response.json() as { username: string };
+      setSessionUser(data.username);
+      setLoginPassword("");
+      await hydrateFromServer();
+      setAuthStatus("signed-in");
+    } catch (error) {
+      setLoginError((error as Error).message);
+    } finally {
+      setLoggingIn(false);
+    }
+  }
+
+  async function logout() {
+    await fetch("/api/logout", { method: "POST", credentials: "include" }).catch(() => undefined);
+    setSessionUser(null);
+    setSyncReady(false);
+    setSyncStatus("idle");
+    setAuthStatus("signed-out");
+  }
 
   function nextCard() {
     window.speechSynthesis?.cancel();
@@ -548,6 +678,31 @@ export default function Home() {
   const pickerBook = contentLibrary.find((book) => book.id === activityPicker?.bookId) ?? activeBook;
   const highlightedTab = activityPicker?.activity ?? tab;
 
+  if (authStatus !== "signed-in") {
+    return (
+      <main className="login-shell">
+        <section className="login-card" aria-live="polite">
+          <div className="login-brand"><span className="brand-mark">D</span><strong>Doris Learning Dictionary</strong></div>
+          {authStatus === "checking" ? (
+            <div className="login-checking"><span className="sync-spinner" />正在读取云端学习进度…</div>
+          ) : (
+            <form onSubmit={login}>
+              <span className="section-kicker">PRIVATE LEARNING SPACE</span>
+              <h1>登录后继续今天的学习</h1>
+              <p>练习进度会安全保存，并在你的不同设备间同步。</p>
+              <label htmlFor="login-username">账号</label>
+              <input id="login-username" value={loginUsername} onChange={(event) => setLoginUsername(event.target.value)} autoComplete="username" inputMode="numeric" />
+              <label htmlFor="login-password">密码</label>
+              <input id="login-password" type="password" value={loginPassword} onChange={(event) => setLoginPassword(event.target.value)} autoComplete="current-password" />
+              {loginError && <div className="login-error" role="alert">{loginError}</div>}
+              <button className="primary-button" type="submit" disabled={loggingIn}>{loggingIn ? "正在登录…" : "登录并同步"}</button>
+            </form>
+          )}
+        </section>
+      </main>
+    );
+  }
+
   return (
     <main className="app-shell">
       <header className="topbar">
@@ -557,8 +712,14 @@ export default function Home() {
             <strong>Doris Learning Dictionary</strong>
           </span>
         </a>
-        <div className="streak" aria-label="今日学习状态">
-          <span>◎</span> 今日已练 {stats.attempts} 题
+        <div className="topbar-actions">
+          <span className={`sync-indicator ${syncStatus}`} title="学习进度同步状态">
+            {syncStatus === "syncing" ? "同步中…" : syncStatus === "error" ? "同步失败" : "已同步"}
+          </span>
+          <button className="account-button" type="button" onClick={logout}>{sessionUser} · 退出</button>
+          <div className="streak" aria-label="今日学习状态">
+            <span>◎</span> 今日已练 {stats.attempts} 题
+          </div>
         </div>
       </header>
 
