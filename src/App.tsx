@@ -230,9 +230,9 @@ const contentLibrary = defineLibrary([
   },
 ]);
 
-const activeBook = contentLibrary[0];
-const activeUnit = activeBook.units[0];
-const starterChunks = activeUnit.chunks;
+const defaultBook = contentLibrary[0];
+const defaultUnit = defaultBook.units[0];
+const starterChunks = defaultUnit.chunks;
 
 function chunkAudioText(chunk: Chunk) {
   return chunk.audioText ?? chunk.english;
@@ -249,6 +249,11 @@ function normalize(value: string) {
 
 export default function Home() {
   const [tab, setTab] = useState<"learn" | "quiz" | "build" | "manage">("learn");
+  const [activeBookId, setActiveBookId] = useState(defaultBook.id);
+  const [activeUnitId, setActiveUnitId] = useState(defaultUnit.id);
+  const [libraryPicker, setLibraryPicker] = useState<"book" | "unit" | null>(null);
+  const activeBook = contentLibrary.find((book) => book.id === activeBookId) ?? defaultBook;
+  const activeUnit = activeBook.units.find((unit) => unit.id === activeUnitId) ?? activeBook.units[0];
   const [chunks, setChunks] = useState<Chunk[]>(starterChunks);
   const [progress, setProgress] = useState<Progress>({});
   const [cardIndex, setCardIndex] = useState(0);
@@ -395,6 +400,32 @@ export default function Home() {
     if (next) setSentenceIndex((value) => (value + 1) % sentences.length);
     setSelectedParts([]);
     setSentenceFeedback(null);
+  }
+
+  function loadUnit(unit: Unit) {
+    window.speechSynthesis?.cancel();
+    setActiveUnitId(unit.id);
+    setChunks(unit.chunks);
+    setCardIndex(0);
+    setQuizIndex(0);
+    setSentenceIndex(0);
+    setRevealed(false);
+    setAnswer("");
+    setFeedback(null);
+    setSelectedParts([]);
+    setSentenceFeedback(null);
+    setSpeakingText(null);
+  }
+
+  function chooseBook(book: Book) {
+    setActiveBookId(book.id);
+    loadUnit(book.units[0]);
+    setLibraryPicker("unit");
+  }
+
+  function chooseUnit(unit: Unit) {
+    loadUnit(unit);
+    setLibraryPicker(null);
   }
 
   return (
@@ -595,8 +626,37 @@ export default function Home() {
                   <p>内容按“书籍 → Unit → 意群”分层管理。发布时会检查重复书名和同一本书下的重复 Unit 名；英文意群允许重复出现。</p>
                 </div>
                 <div className="library-path" aria-label="内容层级">
-                  <span>{activeBook.name}</span><b>›</b><span>Unit {activeUnit.number}</span><b>›</b><strong>{activeUnit.name}</strong>
+                  <button type="button" className="hierarchy-link" onClick={() => setLibraryPicker(libraryPicker === "book" ? null : "book")} aria-expanded={libraryPicker === "book"}>
+                    {activeBook.name}<span aria-hidden="true">⌄</span>
+                  </button>
+                  <b aria-hidden="true">›</b>
+                  <button type="button" className="hierarchy-link" onClick={() => setLibraryPicker(libraryPicker === "unit" ? null : "unit")} aria-expanded={libraryPicker === "unit"}>
+                    Unit {activeUnit.number}<span aria-hidden="true">⌄</span>
+                  </button>
+                  <b aria-hidden="true">›</b>
+                  <button type="button" className="hierarchy-link current" onClick={() => setLibraryPicker(libraryPicker === "unit" ? null : "unit")} aria-expanded={libraryPicker === "unit"}>
+                    {activeUnit.name}<span aria-hidden="true">⌄</span>
+                  </button>
                 </div>
+                {libraryPicker && (
+                  <div className="hierarchy-picker" aria-live="polite">
+                    <div className="picker-heading">
+                      <span>{libraryPicker === "book" ? "选择书籍" : `选择 ${activeBook.name} 的 Unit`}</span>
+                      <button type="button" onClick={() => setLibraryPicker(null)} aria-label="关闭选择器">×</button>
+                    </div>
+                    <div className="picker-options">
+                      {libraryPicker === "book" ? contentLibrary.map((book) => (
+                        <button type="button" key={book.id} className={book.id === activeBook.id ? "active" : ""} onClick={() => chooseBook(book)}>
+                          <span>BOOK</span><strong>{book.name}</strong><small>{book.units.length} 个 Unit</small>
+                        </button>
+                      )) : activeBook.units.map((unit) => (
+                        <button type="button" key={unit.id} className={unit.id === activeUnit.id ? "active" : ""} onClick={() => chooseUnit(unit)}>
+                          <span>UNIT {String(unit.number).padStart(2, "0")}</span><strong>{unit.name}</strong><small>{unit.chunks.length} 个意群</small>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
                 <div className="library-heading"><span>{activeUnit.section.toUpperCase()}</span><strong>{chunks.length} 个意群</strong></div>
                 {chunks.map((chunk, index) => (
                   <article key={chunk.id}>
