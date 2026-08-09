@@ -8,6 +8,21 @@ type Chunk = {
   chinese: string;
   note: string;
   example: string;
+  audioText?: string;
+};
+
+type Unit = {
+  id: string;
+  number: number;
+  name: string;
+  section: string;
+  chunks: Chunk[];
+};
+
+type Book = {
+  id: string;
+  name: string;
+  units: Unit[];
 };
 
 type Progress = Record<number, { correct: number; wrong: number }>;
@@ -30,11 +45,23 @@ const sentences: Sentence[] = [
     chinese: "我喜欢能在不过晚的时间下班回家。",
     parts: ["I like", "to be able to", "go home", "at a reasonable time."],
   },
+  {
+    chinese: "我们公司实行弹性工作制。",
+    parts: ["There’s", "a system of flexitime", "in", "my company."],
+  },
+  {
+    chinese: "我们可以在一定限制范围内按自己的意愿安排工作时间。",
+    parts: ["We can work", "when we want", "within", "certain limits."],
+  },
+  {
+    chinese: "只要每月完成足够工时，我们最早可以三点下班。",
+    parts: ["We can finish", "as early as three", "as long as", "we do enough hours each month."],
+  },
 ];
 
 const initialScramble = [2, 0, 3, 1];
 
-const starterChunks: Chunk[] = [
+const unit2Chunks: Chunk[] = [
   {
     id: 1,
     english: "an office worker",
@@ -98,7 +125,118 @@ const starterChunks: Chunk[] = [
     note: "英式 flexitime；美式 flextime。",
     example: "We have flexitime, so I can start work at eight or ten.",
   },
+  {
+    id: 10,
+    english: "be in computer programming",
+    chinese: "从事计算机编程",
+    note: "be in + 行业或领域，表示从事该领域的工作。",
+    example: "I’m in computer programming.",
+  },
+  {
+    id: 11,
+    english: "a system of flexitime",
+    chinese: "一套弹性工作制度",
+    note: "flexitime 是英式拼法；美式英语常写作 flextime。",
+    example: "There’s a system of flexitime in my company.",
+  },
+  {
+    id: 12,
+    english: "within certain limits",
+    chinese: "在一定限制范围内",
+    note: "within 强调没有超出规定的范围。",
+    example: "We can work when we want, within certain limits.",
+  },
+  {
+    id: 13,
+    english: "at any time",
+    chinese: "在任何时候",
+    note: "常和 start、call、contact 等动词搭配。",
+    example: "We can start at any time till eleven.",
+  },
+  {
+    id: 14,
+    english: "as early as + time",
+    chinese: "最早在……",
+    note: "用来强调某个时间比通常预期的更早。",
+    example: "We can finish as early as three.",
+    audioText: "as early as three",
+  },
+  {
+    id: 15,
+    english: "as long as + clause",
+    chinese: "只要……",
+    note: "引出必须满足的条件，后面接完整句子。",
+    example: "You can leave early as long as you do enough hours.",
+    audioText: "as long as we do enough hours",
+  },
+  {
+    id: 16,
+    english: "do enough hours",
+    chinese: "完成足够工时",
+    note: "英式职场表达，指达到规定的工作时数。",
+    example: "We need to do enough hours each month.",
+  },
+  {
+    id: 17,
+    english: "be ideal for somebody",
+    chinese: "对某人来说很理想",
+    note: "ideal for 后面可以接人、用途或具体情境。",
+    example: "Flexitime is ideal for parents with young children.",
+    audioText: "be ideal for somebody",
+  },
+  {
+    id: 18,
+    english: "young children",
+    chinese: "年幼的孩子",
+    note: "young children 指年龄较小、仍需要较多照顾的孩子。",
+    example: "I have two young children.",
+  },
 ];
+
+function normalizeName(value: string) {
+  return value.trim().toLocaleLowerCase().replace(/\s+/g, " ");
+}
+
+function assertUniqueNames<T>(items: T[], getName: (item: T) => string, level: string) {
+  const seen = new Set<string>();
+  for (const item of items) {
+    const name = normalizeName(getName(item));
+    if (seen.has(name)) throw new Error(`${level}名称重复：${getName(item)}`);
+    seen.add(name);
+  }
+}
+
+function defineLibrary(books: Book[]) {
+  assertUniqueNames(books, (book) => book.name, "书籍");
+  for (const book of books) {
+    assertUniqueNames(book.units, (unit) => unit.name, `书籍“${book.name}”下的 Unit`);
+  }
+  return books;
+}
+
+const contentLibrary = defineLibrary([
+  {
+    id: "business-vocabulary-in-use",
+    name: "Business Vocabulary in Use",
+    units: [
+      {
+        id: "unit-2-ways-of-working",
+        number: 2,
+        name: "Ways of Working",
+        section: "Working hours",
+        chunks: unit2Chunks,
+      },
+    ],
+  },
+]);
+
+const activeBook = contentLibrary[0];
+const activeUnit = activeBook.units[0];
+const starterChunks = activeUnit.chunks;
+
+function chunkAudioText(chunk: Chunk) {
+  return chunk.audioText ?? chunk.english;
+}
 
 function normalize(value: string) {
   return value
@@ -276,7 +414,7 @@ export default function Home() {
 
       <div className="page-grid" id="top">
         <aside className="sidebar">
-          <p className="eyebrow">BUSINESS VOCABULARY IN USE</p>
+          <p className="eyebrow">{activeBook.name.toUpperCase()}</p>
           <nav aria-label="学习功能">
             <button className={tab === "learn" ? "active" : ""} onClick={() => setTab("learn")}>
               <span>01</span> 意群卡片
@@ -293,8 +431,8 @@ export default function Home() {
           </nav>
 
           <div className="unit-card">
-            <span>UNIT 02</span>
-            <strong>Ways of working</strong>
+            <span>UNIT {String(activeUnit.number).padStart(2, "0")}</span>
+            <strong>{activeUnit.name}</strong>
             <div className="unit-progress"><i style={{ width: `${Math.max(8, (stats.mastered / chunks.length) * 100)}%` }} /></div>
             <small>{stats.mastered} / {chunks.length} 已掌握</small>
           </div>
@@ -303,7 +441,7 @@ export default function Home() {
         <section className="content">
           <div className="hero-row">
             <div>
-              <p className="section-kicker">UNIT 02 · WORKING HOURS</p>
+              <p className="section-kicker">UNIT {String(activeUnit.number).padStart(2, "0")} · {activeUnit.section.toUpperCase()}</p>
               <h1>{tab === "learn" ? "先记意群，再让表达自然发生。" : tab === "quiz" ? "看中文，完整想起英文意群。" : tab === "build" ? "把意群放进真正的句子里。" : "每张截图，都会变成可练习的内容。"}</h1>
             </div>
             <div className="metric">
@@ -339,7 +477,7 @@ export default function Home() {
                     <p>{currentCard.example}</p>
                   </div>
                   <div className="audio-practice">
-                    <button className={speakingText === currentCard.english ? "speaking" : ""} onClick={() => speak(currentCard.english)} aria-label={`播放 ${currentCard.english} 的英式发音`}>
+                    <button className={speakingText === chunkAudioText(currentCard) ? "speaking" : ""} onClick={() => speak(chunkAudioText(currentCard))} aria-label={`播放 ${currentCard.english} 的英式发音`}>
                       <span>▶</span> 意群发音
                     </button>
                     <button className={speakingText === currentCard.example ? "speaking" : ""} onClick={() => speak(currentCard.example)} aria-label="播放例句的英式发音">
@@ -385,7 +523,7 @@ export default function Home() {
                   <div className={`feedback ${feedback}`}>
                     <strong>{feedback === "correct" ? "答对了，很稳。" : "差一点，把这个意群整体记住。"}</strong>
                     {feedback === "wrong" && <p>正确答案：<b>{currentQuiz.english}</b></p>}
-                    <button type="button" className="feedback-audio" onClick={() => speak(currentQuiz.english)}>▶ 听英式发音</button>
+                    <button type="button" className="feedback-audio" onClick={() => speak(chunkAudioText(currentQuiz))}>▶ 听英式发音</button>
                     <button type="button" onClick={nextQuestion}>下一题 →</button>
                   </div>
                 )}
@@ -454,14 +592,17 @@ export default function Home() {
                 <div className="library-intro">
                   <span>SCREENSHOT TO PRACTICE</span>
                   <h2>截图交给我，整理和上传也交给我。</h2>
-                  <p>这里展示已经整理好的教材内容。新内容发布后会自动加入，当前设备上的答题次数、正确率和错题记录会继续保留。</p>
+                  <p>内容按“书籍 → Unit → 意群”分层管理。发布时会检查重复书名和同一本书下的重复 Unit 名；英文意群允许重复出现。</p>
                 </div>
-                <div className="library-heading"><span>UNIT 02 · WAYS OF WORKING</span><strong>{chunks.length} 个意群</strong></div>
+                <div className="library-path" aria-label="内容层级">
+                  <span>{activeBook.name}</span><b>›</b><span>Unit {activeUnit.number}</span><b>›</b><strong>{activeUnit.name}</strong>
+                </div>
+                <div className="library-heading"><span>{activeUnit.section.toUpperCase()}</span><strong>{chunks.length} 个意群</strong></div>
                 {chunks.map((chunk, index) => (
                   <article key={chunk.id}>
                     <span className="chunk-number">{String(index + 1).padStart(2, "0")}</span>
                     <div><strong>{chunk.english}</strong><p>{chunk.chinese}</p></div>
-                    <button className={`list-audio ${speakingText === chunk.english ? "speaking" : ""}`} onClick={() => speak(chunk.english)} aria-label={`播放 ${chunk.english} 的英式发音`}>
+                    <button className={`list-audio ${speakingText === chunkAudioText(chunk) ? "speaking" : ""}`} onClick={() => speak(chunkAudioText(chunk))} aria-label={`播放 ${chunk.english} 的英式发音`}>
                       ▶ <span>播放</span>
                     </button>
                   </article>
