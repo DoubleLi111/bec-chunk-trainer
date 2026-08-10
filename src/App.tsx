@@ -545,7 +545,7 @@ export default function Home() {
   const [showReference, setShowReference] = useState(false);
   const [speakingText, setSpeakingText] = useState<string | null>(null);
   const [speechError, setSpeechError] = useState(false);
-  const [showDialogue, setShowDialogue] = useState(false);
+  const [dialogueUnit, setDialogueUnit] = useState<Unit | null>(null);
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
@@ -723,7 +723,7 @@ export default function Home() {
     setSelectedParts([]);
     setSentenceFeedback(null);
     setSpeakingText(null);
-    setShowDialogue(false);
+    setDialogueUnit(null);
   }
 
   function chooseBook(book: Book) {
@@ -1026,7 +1026,7 @@ export default function Home() {
                 {activeUnit.sourceUrl && (
                   <div className="lesson-resources">
                     <a href={activeUnit.sourceUrl} target="_blank" rel="noreferrer">查看原始课程 <span>↗</span></a>
-                    {activeUnit.dialogueSummary && <button type="button" onClick={() => setShowDialogue(true)}>打开对话版摘要 <span>→</span></button>}
+                    {activeUnit.dialogueSummary && <button type="button" onClick={() => setDialogueUnit(activeUnit)}>打开对话版摘要 <span>→</span></button>}
                   </div>
                 )}
                 <div className="library-heading"><span>{activeUnit.section.toUpperCase()}</span><strong>{chunks.length} 个意群</strong></div>
@@ -1111,11 +1111,21 @@ export default function Home() {
                 <p className="activity-picker-book">当前路径：<strong>{pickerBook.name} › {activityPicker.category}</strong></p>
                 <div className="activity-picker-options">
                   {pickerUnits.map((unit) => (
-                    <button type="button" key={unit.id} onClick={() => chooseActivityUnit(unit)}>
-                      <span>LESSON</span>
-                      <strong>{unit.name}</strong>
-                      <small>{unit.chunks.length} 个意群 <i>→</i></small>
-                    </button>
+                    <div className="activity-lesson-option" key={unit.id}>
+                      <button type="button" className="activity-lesson-main" onClick={() => chooseActivityUnit(unit)}>
+                        <span>LESSON</span>
+                        <strong>{unit.name}</strong>
+                        <small>{unit.chunks.length} 个意群 <i>→</i></small>
+                      </button>
+                      {unit.sourceUrl && (
+                        <div className="activity-lesson-resources">
+                          <a href={unit.sourceUrl} target="_blank" rel="noreferrer">查看原始课程 <span>↗</span></a>
+                          {unit.dialogueSummary && (
+                            <button type="button" onClick={() => setDialogueUnit(unit)}>对话版摘要 <span>→</span></button>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   ))}
                 </div>
               </>
@@ -1124,8 +1134,8 @@ export default function Home() {
         </div>
       )}
 
-      {showDialogue && activeUnit.dialogueSummary && (
-        <div className="dialogue-overlay" role="presentation" onClick={() => setShowDialogue(false)}>
+      {dialogueUnit?.dialogueSummary && (
+        <div className="dialogue-overlay" role="presentation" onClick={() => setDialogueUnit(null)}>
           <section
             className="dialogue-dialog"
             role="dialog"
@@ -1136,21 +1146,21 @@ export default function Home() {
             <div className="dialogue-header">
               <div>
                 <span>DIALOGUE SUMMARY</span>
-                <h2 id="dialogue-title">{activeUnit.name}</h2>
+                <h2 id="dialogue-title">{dialogueUnit.name}</h2>
               </div>
-              <button type="button" onClick={() => setShowDialogue(false)} aria-label="关闭对话摘要">×</button>
+              <button type="button" onClick={() => setDialogueUnit(null)} aria-label="关闭对话摘要">×</button>
             </div>
             <p className="dialogue-note">根据课程情境重新编写，重点意群已标出；这不是课程原文的逐字转载。</p>
             <div className="dialogue-turns">
-              {activeUnit.dialogueSummary.map((turn, index) => (
+              {dialogueUnit.dialogueSummary.map((turn, index) => (
                 <article className={`dialogue-turn ${turn.speaker.toLowerCase()}`} key={`${turn.speaker}-${index}`}>
                   <strong>{turn.speaker}</strong>
                   <p>{renderDialogueText(turn)}</p>
                 </article>
               ))}
             </div>
-            {activeUnit.sourceUrl && (
-              <a className="dialogue-source" href={activeUnit.sourceUrl} target="_blank" rel="noreferrer">
+            {dialogueUnit.sourceUrl && (
+              <a className="dialogue-source" href={dialogueUnit.sourceUrl} target="_blank" rel="noreferrer">
                 查看原始课程 <span>↗</span>
               </a>
             )}
