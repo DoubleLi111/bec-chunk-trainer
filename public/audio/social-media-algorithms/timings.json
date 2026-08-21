@@ -1,0 +1,90 @@
+[
+  {
+    "index": 1,
+    "start": 29.37,
+    "end": 37.88,
+    "duration": 8.51,
+    "audio": "sentence-01.mp3",
+    "english": "The word “algorithm” is used so often in online conversations that it has almost become a buzzword."
+  },
+  {
+    "index": 2,
+    "start": 38.24,
+    "end": 44.15,
+    "duration": 5.91,
+    "audio": "sentence-02.mp3",
+    "english": "When people hear the word “algorithm,” they often imagine a nasty secret plot."
+  },
+  {
+    "index": 3,
+    "start": 44.59,
+    "end": 52.77,
+    "duration": 8.18,
+    "audio": "sentence-03.mp3",
+    "english": "In reality, algorithms are just complex sets of instructions that tell computers how to make decisions."
+  },
+  {
+    "index": 4,
+    "start": 53.12,
+    "end": 64.49,
+    "duration": 11.37,
+    "audio": "sentence-04.mp3",
+    "english": "On social media, their aim is to prioritize which posts, videos or reels appear on users’ screens, not to manipulate users."
+  },
+  {
+    "index": 5,
+    "start": 65.28,
+    "end": 73.45,
+    "duration": 8.17,
+    "audio": "sentence-05.mp3",
+    "english": "Algorithms are used because platforms host so many posts that some kind of organizing system is necessary."
+  },
+  {
+    "index": 6,
+    "start": 74.23,
+    "end": 88.82,
+    "duration": 14.59,
+    "audio": "sentence-06.mp3",
+    "english": "The algorithm begins by showing you a small and varied selection of posts, and then it watches how you respond, paying attention to observable actions rather than private thoughts or personal feelings."
+  },
+  {
+    "index": 7,
+    "start": 89.38,
+    "end": 93.85,
+    "duration": 4.47,
+    "audio": "sentence-07.mp3",
+    "english": "Likes, comments and shares are strong signals."
+  },
+  {
+    "index": 8,
+    "start": 94.26,
+    "end": 101.88,
+    "duration": 7.62,
+    "audio": "sentence-08.mp3",
+    "english": "Scrolling past a post quickly, on the other hand, sends a clear signal that the content failed to hold your attention."
+  },
+  {
+    "index": 9,
+    "start": 102.51,
+    "end": 109.47,
+    "duration": 6.96,
+    "audio": "sentence-09.mp3",
+    "english": "Over time, the system learns your patterns of behavior without asking you any direct questions."
+  },
+  {
+    "index": 10,
+    "start": 109.82,
+    "end": 119.95,
+    "duration": 10.13,
+    "audio": "sentence-10.mp3",
+    "english": "Platforms usually can’t reliably perceive whether you like things or not, but they do understand what makes you react with great accuracy."
+  },
+  {
+    "index": 11,
+    "start": 120.43,
+    "end": 130.33,
+    "duration": 9.9,
+    "audio": "sentence-11.mp3",
+    "english": "By comparing your actions with those of other users, algorithms gradually align what you see with things you have responded to in the past."
+  }
+]

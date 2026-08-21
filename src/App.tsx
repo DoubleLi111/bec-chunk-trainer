@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 type Chunk = {
   id: number;
@@ -71,6 +71,25 @@ type DailyPracticeEntry = {
 };
 
 type DailyPractice = Record<string, DailyPracticeEntry>;
+
+type ArticleSentence = {
+  id: number;
+  english: string;
+  chinese: string;
+  audioSrc: string;
+};
+
+type ReadingArticle = {
+  id: string;
+  source: string;
+  month: string;
+  category: string;
+  title: string;
+  subtitle: string;
+  date: string;
+  sourceUrl: string;
+  sentences: ArticleSentence[];
+};
 
 const unit2Sentences: Sentence[] = [
   {
@@ -379,6 +398,85 @@ const footballDialogueSummary: DialogueTurn[] = [
   },
 ];
 
+const socialMediaAlgorithmsArticle: ReadingArticle = {
+  id: "understanding-social-media-algorithms-day-1",
+  source: "空中英语教室",
+  month: "8月",
+  category: "Technology",
+  title: "Understanding Social Media Algorithms",
+  subtitle: "Explore how these digital tools do and don’t influence your online world",
+  date: "2026.08.20 · Day 1",
+  sourceUrl: "https://studioclassroom.soyong.com.tw/sc/reading.aspx?File=BF-08-87-5B-04-F1-8A-AF-0A-9E-02-96-D4-45-DF-E5",
+  sentences: [
+    {
+      id: 1,
+      english: "The word “algorithm” is used so often in online conversations that it has almost become a buzzword.",
+      chinese: "“算法”一词在网络讨论中出现得如此频繁，以至于它几乎成了一个流行术语。",
+      audioSrc: "/audio/social-media-algorithms/sentence-01.mp3",
+    },
+    {
+      id: 2,
+      english: "When people hear the word “algorithm,” they often imagine a nasty secret plot.",
+      chinese: "当人们听到“算法”这个词时，常常会联想到某种邪恶的秘密阴谋。",
+      audioSrc: "/audio/social-media-algorithms/sentence-02.mp3",
+    },
+    {
+      id: 3,
+      english: "In reality, algorithms are just complex sets of instructions that tell computers how to make decisions.",
+      chinese: "实际上，算法只是一套套复杂的指令，用来告诉计算机如何作出决定。",
+      audioSrc: "/audio/social-media-algorithms/sentence-03.mp3",
+    },
+    {
+      id: 4,
+      english: "On social media, their aim is to prioritize which posts, videos or reels appear on users’ screens, not to manipulate users.",
+      chinese: "在社交媒体上，算法的目的是决定哪些帖子、视频或短视频优先出现在用户屏幕上，而不是操纵用户。",
+      audioSrc: "/audio/social-media-algorithms/sentence-04.mp3",
+    },
+    {
+      id: 5,
+      english: "Algorithms are used because platforms host so many posts that some kind of organizing system is necessary.",
+      chinese: "使用算法是因为平台上有太多帖子，因此必须有某种组织整理系统。",
+      audioSrc: "/audio/social-media-algorithms/sentence-05.mp3",
+    },
+    {
+      id: 6,
+      english: "The algorithm begins by showing you a small and varied selection of posts, and then it watches how you respond, paying attention to observable actions rather than private thoughts or personal feelings.",
+      chinese: "算法一开始会向你展示一小批种类多样的帖子，然后观察你的反应；它关注的是可观察到的行为，而不是私人想法或个人感受。",
+      audioSrc: "/audio/social-media-algorithms/sentence-06.mp3",
+    },
+    {
+      id: 7,
+      english: "Likes, comments and shares are strong signals.",
+      chinese: "点赞、评论和分享都是很强的信号。",
+      audioSrc: "/audio/social-media-algorithms/sentence-07.mp3",
+    },
+    {
+      id: 8,
+      english: "Scrolling past a post quickly, on the other hand, sends a clear signal that the content failed to hold your attention.",
+      chinese: "另一方面，快速划过某条帖子会传递一个明确的信号：这条内容没能吸引你的注意力。",
+      audioSrc: "/audio/social-media-algorithms/sentence-08.mp3",
+    },
+    {
+      id: 9,
+      english: "Over time, the system learns your patterns of behavior without asking you any direct questions.",
+      chinese: "随着时间推移，系统无需向你提出任何直接问题，就能了解你的行为模式。",
+      audioSrc: "/audio/social-media-algorithms/sentence-09.mp3",
+    },
+    {
+      id: 10,
+      english: "Platforms usually can’t reliably perceive whether you like things or not, but they do understand what makes you react with great accuracy.",
+      chinese: "平台通常无法可靠地判断你是否喜欢某样东西，但它们却能非常准确地知道什么会让你产生反应。",
+      audioSrc: "/audio/social-media-algorithms/sentence-10.mp3",
+    },
+    {
+      id: 11,
+      english: "By comparing your actions with those of other users, algorithms gradually align what you see with things you have responded to in the past.",
+      chinese: "通过将你的行为与其他用户的行为进行比较，算法会逐渐把你看到的内容与过去曾让你产生反应的内容对齐。",
+      audioSrc: "/audio/social-media-algorithms/sentence-11.mp3",
+    },
+  ],
+};
+
 function normalizeName(value: string) {
   return value.trim().toLocaleLowerCase().replace(/\s+/g, " ");
 }
@@ -524,7 +622,7 @@ function recordDailyResult(mode: DailyModeProgress, itemId: number, isCorrect: b
 }
 
 export default function Home() {
-  const [tab, setTab] = useState<"learn" | "quiz" | "build" | "manage">("learn");
+  const [tab, setTab] = useState<"learn" | "quiz" | "build" | "article" | "manage">("learn");
   const [activeBookId, setActiveBookId] = useState(defaultBook.id);
   const [activeUnitId, setActiveUnitId] = useState(defaultUnit.id);
   const [libraryPicker, setLibraryPicker] = useState<"book" | "category" | "unit" | null>(null);
@@ -546,6 +644,9 @@ export default function Home() {
   const [speakingText, setSpeakingText] = useState<string | null>(null);
   const [speechError, setSpeechError] = useState(false);
   const [dialogueUnit, setDialogueUnit] = useState<Unit | null>(null);
+  const [revealedArticleSentences, setRevealedArticleSentences] = useState<number[]>([]);
+  const [playingArticleSentence, setPlayingArticleSentence] = useState<number | null>(null);
+  const articleAudioRef = useRef<HTMLAudioElement | null>(null);
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
@@ -649,6 +750,31 @@ export default function Home() {
     setSpeechError(false);
     setSpeakingText(text);
     synth.speak(utterance);
+  }
+
+  function toggleArticleTranslation(sentenceId: number) {
+    setRevealedArticleSentences((current) => current.includes(sentenceId)
+      ? current.filter((id) => id !== sentenceId)
+      : [...current, sentenceId]);
+  }
+
+  function playArticleSentence(sentence: ArticleSentence) {
+    window.speechSynthesis?.cancel();
+    setSpeakingText(null);
+    if (articleAudioRef.current) {
+      articleAudioRef.current.pause();
+      articleAudioRef.current.currentTime = 0;
+    }
+    if (playingArticleSentence === sentence.id) {
+      setPlayingArticleSentence(null);
+      return;
+    }
+    const audio = new Audio(sentence.audioSrc);
+    articleAudioRef.current = audio;
+    audio.onended = () => setPlayingArticleSentence(null);
+    audio.onerror = () => setPlayingArticleSentence(null);
+    setPlayingArticleSentence(sentence.id);
+    void audio.play().catch(() => setPlayingArticleSentence(null));
   }
 
   function checkAnswer(event: React.FormEvent) {
@@ -791,7 +917,7 @@ export default function Home() {
 
       <div className="page-grid" id="top">
         <aside className="sidebar">
-          <p className="eyebrow">{activeBook.name.toUpperCase()}</p>
+          <p className="eyebrow">{tab === "article" ? socialMediaAlgorithmsArticle.source : activeBook.name.toUpperCase()}</p>
           <nav aria-label="学习功能">
             <button className={highlightedTab === "learn" ? "active" : ""} onClick={() => beginActivity("learn")}>
               <span>01</span> 意群卡片
@@ -802,31 +928,54 @@ export default function Home() {
             <button className={highlightedTab === "build" ? "active" : ""} onClick={() => beginActivity("build")}>
               <span>03</span> 组装句子
             </button>
+            <button className={tab === "article" && !activityPicker ? "active" : ""} onClick={() => { setActivityPicker(null); setTab("article"); }}>
+              <span>04</span> 文章学习
+            </button>
             <button className={tab === "manage" && !activityPicker ? "active" : ""} onClick={() => { setActivityPicker(null); setTab("manage"); }}>
-              <span>04</span> 内容清单
+              <span>05</span> 内容清单
             </button>
           </nav>
 
           <div className="unit-card">
-            <span>{activeUnit.category.toUpperCase()}</span>
-            <strong>{activeUnit.name}</strong>
-            <div className="unit-progress"><i style={{ width: `${Math.max(8, (stats.mastered / chunks.length) * 100)}%` }} /></div>
-            <small>{stats.mastered} / {chunks.length} 已掌握</small>
+            {tab === "article" ? (
+              <>
+                <span>{socialMediaAlgorithmsArticle.month}</span>
+                <strong>{socialMediaAlgorithmsArticle.category}</strong>
+                <div className="unit-progress"><i style={{ width: "100%" }} /></div>
+                <small>{socialMediaAlgorithmsArticle.sentences.length} 句原声精听</small>
+              </>
+            ) : (
+              <>
+                <span>{activeUnit.category.toUpperCase()}</span>
+                <strong>{activeUnit.name}</strong>
+                <div className="unit-progress"><i style={{ width: `${Math.max(8, (stats.mastered / chunks.length) * 100)}%` }} /></div>
+                <small>{stats.mastered} / {chunks.length} 已掌握</small>
+              </>
+            )}
           </div>
         </aside>
 
         <section className="content">
           <div className="hero-row">
             <div>
-              <p className="section-kicker">{activeUnit.category.toUpperCase()} · {activeUnit.section.toUpperCase()}</p>
+              <p className="section-kicker">{tab === "article"
+                ? `${socialMediaAlgorithmsArticle.source} · ${socialMediaAlgorithmsArticle.month} · ${socialMediaAlgorithmsArticle.category.toUpperCase()}`
+                : `${activeUnit.category.toUpperCase()} · ${activeUnit.section.toUpperCase()}`}</p>
               {tab !== "learn" && (
-                <h1>{tab === "quiz" ? "看中文，完整想起英文意群。" : tab === "build" ? "把意群放进真正的句子里。" : "每张截图，都会变成可练习的内容。"}</h1>
+                <h1>{tab === "quiz"
+                  ? "看中文，完整想起英文意群。"
+                  : tab === "build"
+                    ? "把意群放进真正的句子里。"
+                    : tab === "article"
+                      ? socialMediaAlgorithmsArticle.title
+                      : "每张截图，都会变成可练习的内容。"}</h1>
               )}
             </div>
-            <div className="metric">
-              <strong>{accuracy}%</strong>
-              <span>当前正确率</span>
-            </div>
+            {tab === "article" ? (
+              <div className="metric"><strong>{socialMediaAlgorithmsArticle.sentences.length}</strong><span>逐句原声</span></div>
+            ) : (
+              <div className="metric"><strong>{accuracy}%</strong><span>当前正确率</span></div>
+            )}
           </div>
 
           {tab === "learn" && (
@@ -977,6 +1126,60 @@ export default function Home() {
                 {showReference && <p className="reference-answer">{activeUnit.scenario.reference}</p>}
               </section>
             </div>
+          )}
+
+          {tab === "article" && (
+            <section className="article-stage">
+              <div className="article-header">
+                <div>
+                  <span>{socialMediaAlgorithmsArticle.date}</span>
+                  <p>{socialMediaAlgorithmsArticle.subtitle}</p>
+                </div>
+                <a href={socialMediaAlgorithmsArticle.sourceUrl} target="_blank" rel="noreferrer">查看原始课程 <span>↗</span></a>
+              </div>
+
+              <div className="article-path" aria-label="文章分类路径">
+                <span>{socialMediaAlgorithmsArticle.source}</span>
+                <b>›</b>
+                <span>{socialMediaAlgorithmsArticle.month}</span>
+                <b>›</b>
+                <strong>{socialMediaAlgorithmsArticle.category}</strong>
+              </div>
+
+              <div className="article-instruction">
+                <span>HOW TO STUDY</span>
+                <p>点播放听原声；点击英文句子显示或隐藏中文。</p>
+              </div>
+
+              <div className="article-sentences">
+                {socialMediaAlgorithmsArticle.sentences.map((sentence) => {
+                  const revealed = revealedArticleSentences.includes(sentence.id);
+                  const playing = playingArticleSentence === sentence.id;
+                  return (
+                    <article className={`article-sentence ${revealed ? "revealed" : ""}`} key={sentence.id}>
+                      <span className="article-sentence-number">{String(sentence.id).padStart(2, "0")}</span>
+                      <button
+                        type="button"
+                        className="article-sentence-text"
+                        onClick={() => toggleArticleTranslation(sentence.id)}
+                        aria-expanded={revealed}
+                      >
+                        <strong>{sentence.english}</strong>
+                        {revealed && <span>{sentence.chinese}</span>}
+                      </button>
+                      <button
+                        type="button"
+                        className={`article-audio ${playing ? "playing" : ""}`}
+                        onClick={() => playArticleSentence(sentence)}
+                        aria-label={`${playing ? "停止" : "播放"}第 ${sentence.id} 句原声`}
+                      >
+                        {playing ? "■" : "▶"}<span>{playing ? "停止" : "播放"}</span>
+                      </button>
+                    </article>
+                  );
+                })}
+              </div>
+            </section>
           )}
 
           {tab === "manage" && (
