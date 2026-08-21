@@ -406,7 +406,7 @@ const socialMediaAlgorithmsArticle: ReadingArticle = {
   category: "Technology",
   title: "Understanding Social Media Algorithms",
   subtitle: "Explore how these digital tools do and don’t influence your online world",
-  date: "2026.08.20 · Day 1",
+  date: "2026.08.20–21 · Day 1–2",
   sourceUrl: "https://studioclassroom.soyong.com.tw/sc/reading.aspx?File=BF-08-87-5B-04-F1-8A-AF-0A-9E-02-96-D4-45-DF-E5",
   sentences: [
     {
@@ -474,6 +474,84 @@ const socialMediaAlgorithmsArticle: ReadingArticle = {
       english: "By comparing your actions with those of other users, algorithms gradually align what you see with things you have responded to in the past.",
       chinese: "通过将你的行为与其他用户的行为进行比较，算法会逐渐把你看到的内容与过去曾让你产生反应的内容对齐。",
       audioSrc: "/audio/social-media-algorithms/sentence-11.mp3",
+    },
+    {
+      id: 12,
+      english: "One of the biggest concerns about social media algorithms involves privacy.",
+      chinese: "人们对社交媒体算法最大的担忧之一涉及隐私。",
+      audioSrc: "/audio/social-media-algorithms/sentence-12.mp3",
+    },
+    {
+      id: 13,
+      english: "Many users worry that apps are constantly monitoring them or listening to private conversations.",
+      chinese: "许多用户担心应用程序一直在监视他们，或监听私人谈话。",
+      audioSrc: "/audio/social-media-algorithms/sentence-13.mp3",
+    },
+    {
+      id: 14,
+      english: "Operating systems like iOS and Android limit what data apps can collect by keeping them in separate “sandboxes.”",
+      chinese: "iOS 和 Android 等操作系统通过将应用程序置于彼此隔离的“沙盒”中，限制它们能够收集的数据。",
+      audioSrc: "/audio/social-media-algorithms/sentence-14.mp3",
+    },
+    {
+      id: 15,
+      english: "But while social media apps cannot access your banking app, read your emails or open files in other programs, concerns persist.",
+      chinese: "但是，尽管社交媒体应用无法访问你的银行应用、读取邮件或打开其他程序中的文件，人们的担忧仍然存在。",
+      audioSrc: "/audio/social-media-algorithms/sentence-15.mp3",
+    },
+    {
+      id: 16,
+      english: "This is largely because algorithms are so good at presenting users with information that is relevant to them.",
+      chinese: "这主要是因为算法非常善于向用户呈现与他们相关的信息。",
+      audioSrc: "/audio/social-media-algorithms/sentence-16.mp3",
+    },
+    {
+      id: 17,
+      english: "By combining information collected within the app with location data and personal information that users have given them, algorithms can infer a good deal.",
+      chinese: "通过把应用内收集的信息与位置数据及用户提供的个人信息相结合，算法可以推断出大量信息。",
+      audioSrc: "/audio/social-media-algorithms/sentence-17.mp3",
+    },
+    {
+      id: 18,
+      english: "Over time, this allows them to build an extremely detailed profile of each user.",
+      chinese: "随着时间推移，这使算法能够为每位用户建立极其详细的个人画像。",
+      audioSrc: "/audio/social-media-algorithms/sentence-18.mp3",
+    },
+    {
+      id: 19,
+      english: "Algorithms can also limit the diversity of information people are able to see.",
+      chinese: "算法也会限制人们能够看到的信息多样性。",
+      audioSrc: "/audio/social-media-algorithms/sentence-19.mp3",
+    },
+    {
+      id: 20,
+      english: "Since these systems prioritize content that triggers strong reactions, algorithms often recommend the types of material users react to repeatedly.",
+      chinese: "由于这些系统会优先推送引发强烈反应的内容，算法往往反复推荐用户经常产生反应的内容类型。",
+      audioSrc: "/audio/social-media-algorithms/sentence-20.mp3",
+    },
+    {
+      id: 21,
+      english: "This can gradually lead users into echo chambers where they aren’t exposed to new ideas or broader perspectives.",
+      chinese: "这会逐渐把用户带入“回音室”，让他们接触不到新观点或更广阔的视角。",
+      audioSrc: "/audio/social-media-algorithms/sentence-21.mp3",
+    },
+    {
+      id: 22,
+      english: "Understanding these risks does not mean it’s necessary to avoid using social media altogether.",
+      chinese: "认识到这些风险并不意味着有必要完全避开社交媒体。",
+      audioSrc: "/audio/social-media-algorithms/sentence-22.mp3",
+    },
+    {
+      id: 23,
+      english: "Instead, it demands awareness and thoughtful use.",
+      chinese: "相反，这要求我们保持警觉并审慎使用。",
+      audioSrc: "/audio/social-media-algorithms/sentence-23.mp3",
+    },
+    {
+      id: 24,
+      english: "When approached carefully, social media can inform and entertain rather than subtly shape habits without the user realizing it.",
+      chinese: "如果谨慎使用，社交媒体可以提供信息和娱乐，而不是在用户毫无察觉的情况下悄然塑造其习惯。",
+      audioSrc: "/audio/social-media-algorithms/sentence-24.mp3",
     },
   ],
 };

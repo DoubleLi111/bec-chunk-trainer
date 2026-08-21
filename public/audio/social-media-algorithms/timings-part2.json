@@ -1,0 +1,106 @@
+[
+  {
+    "index": 12,
+    "start": 0.96,
+    "end": 6.54,
+    "duration": 5.58,
+    "audio": "sentence-12.mp3",
+    "english": "One of the biggest concerns about social media algorithms involves privacy."
+  },
+  {
+    "index": 13,
+    "start": 7.07,
+    "end": 13.87,
+    "duration": 6.8,
+    "audio": "sentence-13.mp3",
+    "english": "Many users worry that apps are constantly monitoring them or listening to private conversations."
+  },
+  {
+    "index": 14,
+    "start": 14.38,
+    "end": 23.53,
+    "duration": 9.15,
+    "audio": "sentence-14.mp3",
+    "english": "Operating systems like iOS and Android limit what data apps can collect by keeping them in separate sandboxes."
+  },
+  {
+    "index": 15,
+    "start": 23.67,
+    "end": 33.36,
+    "duration": 9.69,
+    "audio": "sentence-15.mp3",
+    "english": "But while social media apps cannot access your banking app, read your emails or open files in other programs, concerns persist."
+  },
+  {
+    "index": 16,
+    "start": 33.72,
+    "end": 41.25,
+    "duration": 7.53,
+    "audio": "sentence-16.mp3",
+    "english": "This is largely because algorithms are so good at presenting users with information that is relevant to them."
+  },
+  {
+    "index": 17,
+    "start": 41.76,
+    "end": 53.12,
+    "duration": 11.36,
+    "audio": "sentence-17.mp3",
+    "english": "By combining information collected within the app with location data and personal information that users have given them, algorithms can infer a good deal."
+  },
+  {
+    "index": 18,
+    "start": 53.47,
+    "end": 59.97,
+    "duration": 6.5,
+    "audio": "sentence-18.mp3",
+    "english": "Over time, this allows them to build an extremely detailed profile of each user."
+  },
+  {
+    "index": 19,
+    "start": 60.5,
+    "end": 66.97,
+    "duration": 6.47,
+    "audio": "sentence-19.mp3",
+    "english": "Algorithms can also limit the diversity of information people are able to see."
+  },
+  {
+    "index": 20,
+    "start": 67.52,
+    "end": 78.15,
+    "duration": 10.63,
+    "audio": "sentence-20.mp3",
+    "english": "Since these systems prioritize content that triggers strong reactions, algorithms often recommend the types of material users react to repeatedly."
+  },
+  {
+    "index": 21,
+    "start": 78.53,
+    "end": 86.96,
+    "duration": 8.43,
+    "audio": "sentence-21.mp3",
+    "english": "This can gradually lead users into echo chambers where they aren’t exposed to new ideas or broader perspectives."
+  },
+  {
+    "index": 22,
+    "start": 87.6,
+    "end": 93.91,
+    "duration": 6.31,
+    "audio": "sentence-22.mp3",
+    "english": "Understanding these risks does not mean it’s necessary to avoid using social media altogether."
+  },
+  {
+    "index": 23,
+    "start": 94.35,
+    "end": 98.6,
+    "duration": 4.25,
+    "audio": "sentence-23.mp3",
+    "english": "Instead, it demands awareness and thoughtful use."
+  },
+  {
+    "index": 24,
+    "start": 98.94,
+    "end": 108.5,
+    "duration": 9.56,
+    "audio": "sentence-24.mp3",
+    "english": "When approached carefully, social media can inform and entertain rather than subtly shape habits without the user realizing it."
+  }
+]
