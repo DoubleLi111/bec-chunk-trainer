@@ -20,6 +20,7 @@ type Unit = {
   sentences: Sentence[];
   sourceUrl?: string;
   dialogueSummary?: DialogueTurn[];
+  article?: ReadingArticle;
   scenario: Scenario;
 };
 
@@ -31,7 +32,7 @@ type Book = {
 
 type Progress = Record<number, { correct: number; wrong: number }>;
 
-type ActivityTab = "learn" | "quiz" | "build";
+type ActivityTab = "learn" | "quiz" | "build" | "article";
 
 type ActivityPicker = {
   activity: ActivityTab;
@@ -548,6 +549,29 @@ const contentLibrary = defineLibrary([
       },
     ],
   },
+  {
+    id: "studio-classroom",
+    name: "空中英语教室",
+    units: [
+      {
+        id: "understanding-social-media-algorithms",
+        category: "8月",
+        name: "Understanding Social Media Algorithms",
+        section: "Technology",
+        chunks: [],
+        sentences: [],
+        sourceUrl: socialMediaAlgorithmsArticle.sourceUrl,
+        article: socialMediaAlgorithmsArticle,
+        scenario: {
+          label: "ARTICLE STUDY",
+          question: "Understanding Social Media Algorithms",
+          prompt: "逐句听原声，并按需查看中文。",
+          placeholder: "",
+          reference: "",
+        },
+      },
+    ],
+  },
 ]);
 
 const defaultBook = contentLibrary[0];
@@ -558,6 +582,7 @@ const activityNames: Record<ActivityTab, string> = {
   learn: "意群卡片",
   quiz: "快速测验",
   build: "组装句子",
+  article: "文章学习",
 };
 
 function chunkAudioText(chunk: Chunk) {
@@ -566,6 +591,14 @@ function chunkAudioText(chunk: Chunk) {
 
 function categoriesFor(book: Book) {
   return [...new Set(book.units.map((unit) => unit.category))];
+}
+
+function unitsForActivity(book: Book, activity: ActivityTab) {
+  return book.units.filter((unit) => activity === "article" ? Boolean(unit.article) : !unit.article);
+}
+
+function categoriesForActivity(book: Book, activity: ActivityTab) {
+  return [...new Set(unitsForActivity(book, activity).map((unit) => unit.category))];
 }
 
 function escapeRegExp(value: string) {
@@ -630,6 +663,7 @@ export default function Home() {
   const [activityPicker, setActivityPicker] = useState<ActivityPicker | null>(null);
   const activeBook = contentLibrary.find((book) => book.id === activeBookId) ?? defaultBook;
   const activeUnit = activeBook.units.find((unit) => unit.id === activeUnitId) ?? activeBook.units[0];
+  const activeArticle = activeUnit.article ?? socialMediaAlgorithmsArticle;
   const [chunks, setChunks] = useState<Chunk[]>(starterChunks);
   const [progress, setProgress] = useState<Progress>({});
   const [dailyPractice, setDailyPractice] = useState<DailyPractice>({});
@@ -867,6 +901,7 @@ export default function Home() {
   function chooseUnit(unit: Unit) {
     loadUnit(unit);
     setLibraryPicker(null);
+    if (unit.article) setTab("article");
   }
 
   function beginActivity(activity: ActivityTab) {
@@ -875,7 +910,12 @@ export default function Home() {
   }
 
   function chooseActivityBook(book: Book) {
-    setActivityPicker((current) => current ? { ...current, step: "category", bookId: book.id, category: categoriesFor(book)[0] } : current);
+    setActivityPicker((current) => current ? {
+      ...current,
+      step: "category",
+      bookId: book.id,
+      category: categoriesForActivity(book, current.activity)[0],
+    } : current);
   }
 
   function chooseActivityCategory(category: string) {
@@ -892,7 +932,12 @@ export default function Home() {
   }
 
   const pickerBook = contentLibrary.find((book) => book.id === activityPicker?.bookId) ?? activeBook;
-  const pickerUnits = pickerBook.units.filter((unit) => normalizeName(unit.category) === normalizeName(activityPicker?.category ?? ""));
+  const activityBooks = activityPicker
+    ? contentLibrary.filter((book) => unitsForActivity(book, activityPicker.activity).length)
+    : contentLibrary;
+  const pickerUnits = activityPicker
+    ? unitsForActivity(pickerBook, activityPicker.activity).filter((unit) => normalizeName(unit.category) === normalizeName(activityPicker.category))
+    : [];
   const highlightedTab = activityPicker?.activity ?? tab;
 
   function renderDialogueText(turn: DialogueTurn) {
@@ -917,7 +962,7 @@ export default function Home() {
 
       <div className="page-grid" id="top">
         <aside className="sidebar">
-          <p className="eyebrow">{tab === "article" ? socialMediaAlgorithmsArticle.source : activeBook.name.toUpperCase()}</p>
+          <p className="eyebrow">{tab === "article" ? activeBook.name : activeBook.name.toUpperCase()}</p>
           <nav aria-label="学习功能">
             <button className={highlightedTab === "learn" ? "active" : ""} onClick={() => beginActivity("learn")}>
               <span>01</span> 意群卡片
@@ -928,7 +973,7 @@ export default function Home() {
             <button className={highlightedTab === "build" ? "active" : ""} onClick={() => beginActivity("build")}>
               <span>03</span> 组装句子
             </button>
-            <button className={tab === "article" && !activityPicker ? "active" : ""} onClick={() => { setActivityPicker(null); setTab("article"); }}>
+            <button className={tab === "article" && !activityPicker ? "active" : ""} onClick={() => beginActivity("article")}>
               <span>04</span> 文章学习
             </button>
             <button className={tab === "manage" && !activityPicker ? "active" : ""} onClick={() => { setActivityPicker(null); setTab("manage"); }}>
@@ -939,10 +984,10 @@ export default function Home() {
           <div className="unit-card">
             {tab === "article" ? (
               <>
-                <span>{socialMediaAlgorithmsArticle.month}</span>
-                <strong>{socialMediaAlgorithmsArticle.category}</strong>
+                <span>{activeUnit.category}</span>
+                <strong>{activeUnit.name}</strong>
                 <div className="unit-progress"><i style={{ width: "100%" }} /></div>
-                <small>{socialMediaAlgorithmsArticle.sentences.length} 句原声精听</small>
+                <small>{activeArticle.sentences.length} 句原声精听</small>
               </>
             ) : (
               <>
@@ -959,7 +1004,7 @@ export default function Home() {
           <div className="hero-row">
             <div>
               <p className="section-kicker">{tab === "article"
-                ? `${socialMediaAlgorithmsArticle.source} · ${socialMediaAlgorithmsArticle.month} · ${socialMediaAlgorithmsArticle.category.toUpperCase()}`
+                ? `${activeBook.name} · ${activeUnit.category} · ${activeUnit.section.toUpperCase()}`
                 : `${activeUnit.category.toUpperCase()} · ${activeUnit.section.toUpperCase()}`}</p>
               {tab !== "learn" && (
                 <h1>{tab === "quiz"
@@ -967,12 +1012,12 @@ export default function Home() {
                   : tab === "build"
                     ? "把意群放进真正的句子里。"
                     : tab === "article"
-                      ? socialMediaAlgorithmsArticle.title
+                      ? activeArticle.title
                       : "每张截图，都会变成可练习的内容。"}</h1>
               )}
             </div>
             {tab === "article" ? (
-              <div className="metric"><strong>{socialMediaAlgorithmsArticle.sentences.length}</strong><span>逐句原声</span></div>
+              <div className="metric"><strong>{activeArticle.sentences.length}</strong><span>逐句原声</span></div>
             ) : (
               <div className="metric"><strong>{accuracy}%</strong><span>当前正确率</span></div>
             )}
@@ -1132,18 +1177,18 @@ export default function Home() {
             <section className="article-stage">
               <div className="article-header">
                 <div>
-                  <span>{socialMediaAlgorithmsArticle.date}</span>
-                  <p>{socialMediaAlgorithmsArticle.subtitle}</p>
+                  <span>{activeArticle.date}</span>
+                  <p>{activeArticle.subtitle}</p>
                 </div>
-                <a href={socialMediaAlgorithmsArticle.sourceUrl} target="_blank" rel="noreferrer">查看原始课程 <span>↗</span></a>
+                <a href={activeArticle.sourceUrl} target="_blank" rel="noreferrer">查看原始课程 <span>↗</span></a>
               </div>
 
               <div className="article-path" aria-label="文章分类路径">
-                <span>{socialMediaAlgorithmsArticle.source}</span>
+                <span>{activeBook.name}</span>
                 <b>›</b>
-                <span>{socialMediaAlgorithmsArticle.month}</span>
+                <span>{activeUnit.category}</span>
                 <b>›</b>
-                <strong>{socialMediaAlgorithmsArticle.category}</strong>
+                <strong>{activeUnit.name}</strong>
               </div>
 
               <div className="article-instruction">
@@ -1152,7 +1197,7 @@ export default function Home() {
               </div>
 
               <div className="article-sentences">
-                {socialMediaAlgorithmsArticle.sentences.map((sentence) => {
+                {activeArticle.sentences.map((sentence) => {
                   const revealed = revealedArticleSentences.includes(sentence.id);
                   const playing = playingArticleSentence === sentence.id;
                   return (
@@ -1232,8 +1277,20 @@ export default function Home() {
                     {activeUnit.dialogueSummary && <button type="button" onClick={() => setDialogueUnit(activeUnit)}>打开对话版摘要 <span>→</span></button>}
                   </div>
                 )}
-                <div className="library-heading"><span>{activeUnit.section.toUpperCase()}</span><strong>{chunks.length} 个意群</strong></div>
-                {chunks.map((chunk, index) => (
+                <div className="library-heading">
+                  <span>{activeUnit.section.toUpperCase()}</span>
+                  <strong>{activeUnit.article ? `${activeUnit.article.sentences.length} 句原声精听` : `${chunks.length} 个意群`}</strong>
+                </div>
+                {activeUnit.article ? (
+                  <div className="article-library-entry">
+                    <div>
+                      <span>ARTICLE COURSE</span>
+                      <strong>{activeUnit.name}</strong>
+                      <p>{activeUnit.article.subtitle}</p>
+                    </div>
+                    <button type="button" className="primary-button" onClick={() => setTab("article")}>打开文章学习 <span>→</span></button>
+                  </div>
+                ) : chunks.map((chunk, index) => (
                   <article key={chunk.id}>
                     <span className="chunk-number">{String(index + 1).padStart(2, "0")}</span>
                     <div><strong>{chunk.english}</strong><p>{chunk.chinese}</p></div>
@@ -1274,11 +1331,11 @@ export default function Home() {
 
             {activityPicker.step === "book" ? (
               <div className="activity-picker-options">
-                {contentLibrary.map((book) => (
+                {activityBooks.map((book) => (
                   <button type="button" key={book.id} onClick={() => chooseActivityBook(book)}>
                     <span>BOOK</span>
                     <strong>{book.name}</strong>
-                    <small>{categoriesFor(book).length} 个分类 <i>→</i></small>
+                    <small>{categoriesForActivity(book, activityPicker.activity).length} 个分类 <i>→</i></small>
                   </button>
                 ))}
               </div>
@@ -1293,11 +1350,11 @@ export default function Home() {
                 </button>
                 <p className="activity-picker-book">当前书籍：<strong>{pickerBook.name}</strong></p>
                 <div className="activity-picker-options">
-                  {categoriesFor(pickerBook).map((category) => (
+                  {categoriesForActivity(pickerBook, activityPicker.activity).map((category) => (
                     <button type="button" key={category} onClick={() => chooseActivityCategory(category)}>
                       <span>CATEGORY</span>
                       <strong>{category}</strong>
-                      <small>{pickerBook.units.filter((unit) => unit.category === category).length} 个课程 <i>→</i></small>
+                      <small>{unitsForActivity(pickerBook, activityPicker.activity).filter((unit) => unit.category === category).length} 个课程 <i>→</i></small>
                     </button>
                   ))}
                 </div>
@@ -1318,7 +1375,7 @@ export default function Home() {
                       <button type="button" className="activity-lesson-main" onClick={() => chooseActivityUnit(unit)}>
                         <span>LESSON</span>
                         <strong>{unit.name}</strong>
-                        <small>{unit.chunks.length} 个意群 <i>→</i></small>
+                        <small>{unit.article ? `${unit.article.sentences.length} 句原声精听` : `${unit.chunks.length} 个意群`} <i>→</i></small>
                       </button>
                       {unit.sourceUrl && (
                         <div className="activity-lesson-resources">
