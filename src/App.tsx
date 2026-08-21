@@ -361,6 +361,166 @@ const footballIdiomsSentences: Sentence[] = [
   },
 ];
 
+const prenupChunks: Chunk[] = [
+  {
+    id: 201,
+    english: "a prenup / prenuptial agreement",
+    chinese: "婚前协议",
+    note: "prenup 是 prenuptial agreement 的常用简称。",
+    example: "They signed a prenuptial agreement before getting married.",
+    audioText: "a prenup, or a prenuptial agreement",
+  },
+  {
+    id: 202,
+    english: "a trigger clause",
+    chinese: "触发条款",
+    note: "指在特定事件发生后自动生效的合同条款。",
+    example: "The contract contains a trigger clause that takes effect if either partner leaves the workforce.",
+  },
+  {
+    id: 203,
+    english: "a marital horror story",
+    chinese: "可怕的婚姻经历",
+    note: "常用于概括婚姻中极端糟糕且具有警示意义的经历。",
+    example: "The divorce lawyer has heard every imaginable marital horror story.",
+  },
+  {
+    id: 204,
+    english: "stay home with the children",
+    chinese: "留在家中照顾孩子",
+    note: "强调为了照护孩子而成为家庭中的主要照护者。",
+    example: "One parent may choose to stay home with the children for several years.",
+  },
+  {
+    id: 205,
+    english: "a stay-at-home parent",
+    chinese: "全职照顾孩子的家长",
+    note: "可指全职妈妈或全职爸爸，表达比 housewife 更中性。",
+    example: "A stay-at-home parent still makes a major contribution to the family.",
+  },
+  {
+    id: 206,
+    english: "be left with very little",
+    chinese: "最后几乎一无所有",
+    note: "表示关系或安排结束后，某人得到的金钱或资源非常少。",
+    example: "Without legal protection, the caregiver could be left with very little after a divorce.",
+  },
+  {
+    id: 207,
+    english: "over the last couple of years",
+    chinese: "在过去几年中",
+    note: "常与现在完成时连用，强调一段时间内的渐进变化。",
+    example: "Over the last couple of years, more couples have discussed finances before marriage.",
+  },
+  {
+    id: 208,
+    english: "craft an agreement",
+    chinese: "精心起草协议",
+    note: "craft 强调经过仔细思考和设计，而不只是普通的 write。",
+    example: "A lawyer helped them craft an agreement that protects both partners.",
+  },
+  {
+    id: 209,
+    english: "leave the workforce",
+    chinese: "退出劳动力市场",
+    note: "强调全面、较长期地停止有偿工作。",
+    example: "Some parents leave the workforce to care for young children.",
+  },
+  {
+    id: 210,
+    english: "give up a career",
+    chinese: "放弃职业生涯",
+    note: "比 leave a job 影响更长期，常涉及收入和晋升机会的损失。",
+    example: "No one should be financially punished for giving up a career to support the family.",
+  },
+  {
+    id: 211,
+    english: "provide financial support",
+    chinese: "提供经济支持",
+    note: "适用于家庭、福利、雇佣和社会政策等多种语境。",
+    example: "The working partner agreed to provide financial support to the caregiver.",
+  },
+  {
+    id: 212,
+    english: "except in the case of…",
+    chinese: "除……情况之外",
+    note: "较正式，常用于规则、合同和通知中说明例外情况。",
+    example: "The clause applies except in the case of infidelity.",
+    audioText: "except in the case of",
+  },
+  {
+    id: 213,
+    english: "get a view into how…",
+    chinese: "深入了解……如何……",
+    note: "用于说明某件事让人了解他人的想法、过程或决策方式。",
+    example: "The discussion gave her a view into how her partner thinks about their future.",
+    audioText: "get a view into how",
+  },
+  {
+    id: 214,
+    english: "a financial planning exercise",
+    chinese: "一次财务规划实践",
+    note: "exercise 在这里指有明确目的的规划或分析过程。",
+    example: "Creating the agreement became a useful financial planning exercise.",
+  },
+  {
+    id: 215,
+    english: "set aside money",
+    chinese: "留出一笔钱",
+    note: "表示为特定目的预留资金，也可将 money 换成 time 或 resources。",
+    example: "Each partner should set aside money for emergencies.",
+  },
+  {
+    id: 216,
+    english: "an annual raise",
+    chinese: "年度加薪",
+    note: "BEC 常用表达；raise 为美式英语，英式英语常用 pay rise。",
+    example: "The calculation includes a three-percent annual raise.",
+  },
+  {
+    id: 217,
+    english: "contribute to an investment account",
+    chinese: "向投资账户存款",
+    note: "contribute to 强调定期投入资金或资源。",
+    example: "Both partners agreed to contribute to an investment account every month.",
+  },
+  {
+    id: 218,
+    english: "go solely to somebody",
+    chinese: "完全归某人所有",
+    note: "用于说明资金、资产或收益的唯一归属。",
+    example: "The money would go solely to the stay-at-home parent in a divorce.",
+    audioText: "go solely to somebody",
+  },
+];
+
+const prenupSentences: Sentence[] = [
+  {
+    chinese: "在过去几年中，越来越多夫妻开始认真起草婚前协议。",
+    parts: ["Over the last couple of years,", "more couples", "have started to", "craft prenuptial agreements carefully."],
+  },
+  {
+    chinese: "有些家长为了在家照顾孩子而退出劳动力市场。",
+    parts: ["Some parents", "leave the workforce", "to stay home", "with the children."],
+  },
+  {
+    chinese: "触发条款可以为放弃职业生涯的一方提供经济支持。",
+    parts: ["A trigger clause", "can provide financial support", "to the partner", "who gives up a career."],
+  },
+  {
+    chinese: "夫妻可以定期向投资账户存款。",
+    parts: ["Couples can", "contribute regularly", "to an investment account", "for future security."],
+  },
+  {
+    chinese: "这笔钱在离婚时将完全归全职照护孩子的一方所有。",
+    parts: ["The money", "would go solely", "to the stay-at-home parent", "in a divorce."],
+  },
+  {
+    chinese: "讨论婚前协议可以成为一次有用的财务规划实践。",
+    parts: ["Discussing a prenup", "can become", "a useful", "financial planning exercise."],
+  },
+];
+
 const footballDialogueSummary: DialogueTurn[] = [
   {
     speaker: "Karl",
@@ -623,6 +783,27 @@ const contentLibrary = defineLibrary([
           prompt: "说明你为什么想申请、担心什么，以及新的竞争环境是否公平。",
           placeholder: "I’ve been kicking the idea around...",
           reference: "I’ve been kicking the idea around because I don’t want to play it safe and stay on the sidelines. I may not be in the same league as every candidate, but I know the score and I’m ready to carry the ball.",
+        },
+      },
+    ],
+  },
+  {
+    id: "ylyk",
+    name: "YLYK",
+    units: [
+      {
+        id: "news-prenuptial-agreements",
+        category: "News",
+        name: "婚前协议",
+        section: "Marriage & financial planning",
+        chunks: prenupChunks,
+        sentences: prenupSentences,
+        scenario: {
+          label: "IELTS SPEAKING · BEC DISCUSSION",
+          question: "Should couples discuss financial arrangements before marriage?",
+          prompt: "尝试使用 prenuptial agreement、leave the workforce、provide financial support 和 set aside money。",
+          placeholder: "I think couples should discuss...",
+          reference: "I think couples should discuss financial arrangements before marriage. A prenuptial agreement can protect a partner who leaves the workforce, while setting aside money can provide long-term financial security for both people.",
         },
       },
     ],
