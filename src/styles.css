@@ -407,6 +407,95 @@ button { color: inherit; }
 .shadowing-recap-list p { grid-column: 1 / -1; margin: 0; color: #b8ccc7; font-size: 11px; }
 .shadowing-recap-list button { position: absolute; top: 50%; right: 13px; transform: translateY(-50%); border: 0; background: transparent; color: var(--mint); cursor: pointer; }
 
+/* Focused dialogue studio */
+.shadowing-studio { display: grid; grid-template-columns: 245px minmax(0, 1fr); overflow: hidden; min-height: 650px; border: 1px solid #d5dcd7; border-radius: 26px 26px 26px 8px; background: #f8f6ef; box-shadow: 0 18px 58px rgba(30,48,48,.08); }
+.shadowing-playlist { display: flex; flex-direction: column; border-right: 1px solid #d8ddd8; padding: 25px 17px 18px; background: #183238; color: white; }
+.playlist-heading { padding: 5px 8px 21px; }
+.playlist-heading > span { color: #94cdb7; font-size: 8px; font-weight: 850; letter-spacing: .17em; }
+.playlist-heading h2 { margin: 8px 0 5px; font-family: Georgia, serif; font-size: 22px; font-weight: 500; line-height: 1.16; }
+.playlist-heading p { margin: 0; color: #8ca3a3; font-size: 9px; letter-spacing: .1em; }
+.shadowing-playlist nav { display: grid; gap: 5px; }
+.shadowing-playlist nav > button { display: grid; grid-template-columns: 27px minmax(0, 1fr) auto; gap: 8px; align-items: center; width: 100%; border: 0; border-radius: 12px; padding: 12px 9px; background: transparent; color: #bed0cf; cursor: pointer; text-align: left; transition: .18s ease; }
+.shadowing-playlist nav > button:hover { background: rgba(255,255,255,.07); }
+.shadowing-playlist nav > button.active { background: #fffdf8; color: var(--ink); box-shadow: 0 9px 25px rgba(3,18,21,.2); }
+.shadowing-playlist nav > button > b { color: #76ad9d; font-family: Georgia, serif; font-size: 11px; }
+.shadowing-playlist nav > button > span { display: grid; gap: 3px; min-width: 0; }
+.shadowing-playlist nav strong { overflow: hidden; font-family: Georgia, serif; font-size: 14px; font-weight: 500; text-overflow: ellipsis; white-space: nowrap; }
+.shadowing-playlist nav small { overflow: hidden; color: #829b9b; font-size: 8px; text-overflow: ellipsis; white-space: nowrap; }
+.shadowing-playlist nav i { color: #789090; font-size: 8px; font-style: normal; }
+.shadowing-playlist nav > button.active small, .shadowing-playlist nav > button.active i { color: #778987; }
+.playlist-recap { margin-top: auto; border-top: 1px solid rgba(255,255,255,.11); padding-top: 16px; }
+.playlist-recap summary { display: flex; justify-content: space-between; padding: 8px; color: #bad0cd; cursor: pointer; font-size: 10px; font-weight: 750; list-style: none; }
+.playlist-recap summary::-webkit-details-marker { display: none; }
+.playlist-recap[open] summary span { transform: rotate(45deg); }
+.playlist-recap > button { display: flex; align-items: center; justify-content: space-between; width: 100%; border: 0; border-radius: 9px; padding: 8px; background: transparent; color: white; cursor: pointer; text-align: left; }
+.playlist-recap > button:hover { background: rgba(255,255,255,.07); }
+.playlist-recap > button > span { display: grid; gap: 2px; min-width: 0; }
+.playlist-recap strong { overflow: hidden; font-family: Georgia, serif; font-size: 11px; font-weight: 500; text-overflow: ellipsis; white-space: nowrap; }
+.playlist-recap small { color: #7f9998; font-size: 8px; }
+.playlist-recap b { color: var(--mint); font-size: 8px; }
+.shadowing-playlist > a { align-self: flex-start; margin: 14px 8px 0; color: #87aeaa; text-decoration: none; font-size: 9px; }
+.shadowing-focus { display: flex; flex-direction: column; min-width: 0; background: #fffdf8; }
+.focus-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; padding: 30px 34px 19px; }
+.focus-heading > div > span { color: var(--teal); font-size: 8px; font-weight: 850; letter-spacing: .13em; }
+.focus-heading h2 { margin: 7px 0 0; font-family: Georgia, serif; font-size: clamp(28px, 4vw, 39px); font-weight: 500; letter-spacing: -.02em; }
+.focus-heading > span { border: 1px solid #d5ddd8; border-radius: 999px; padding: 7px 9px; color: #7b8d8a; font-size: 8px; font-weight: 800; }
+.focus-player { display: grid; grid-template-columns: 46px minmax(100px, 1fr) auto auto; gap: 12px; align-items: center; margin: 0 34px; border-radius: 15px; padding: 13px 15px; background: #e7f1ec; }
+.focus-play { display: grid; place-items: center; width: 43px; height: 43px; border: 0; border-radius: 50%; padding-left: 3px; background: var(--teal); color: white; cursor: pointer; font-size: 14px; }
+.focus-play.playing { padding-left: 0; animation: audioPulse 1s ease-in-out infinite; }
+.focus-track { display: grid; gap: 7px; }
+.focus-track strong { font-size: 10px; }
+.focus-track > div { height: 3px; overflow: hidden; border-radius: 999px; background: rgba(21,107,105,.18); }
+.focus-track i { display: block; width: 26%; height: 100%; border-radius: inherit; background: var(--teal); }
+.focus-track i.moving { animation: focusProgress 2.2s ease-in-out infinite alternate; }
+@keyframes focusProgress { to { transform: translateX(280%); } }
+.focus-player > button:not(.focus-play) { border: 0; border-radius: 999px; padding: 8px 10px; background: transparent; color: var(--teal); cursor: pointer; font-size: 9px; font-weight: 800; }
+.focus-player > button.active { background: var(--teal); color: white; }
+.focus-speed { display: flex; border-left: 1px solid #c7d7d0; padding-left: 9px; }
+.focus-speed button { border: 0; border-radius: 999px; padding: 6px 7px; background: transparent; color: #76918b; cursor: pointer; font-size: 8px; }
+.focus-speed button.active { background: white; color: var(--teal); box-shadow: 0 2px 8px rgba(21,107,105,.12); }
+.practice-tabs { display: grid; grid-template-columns: repeat(3, 1fr); margin: 23px 34px 0; border-bottom: 1px solid #dfe3df; }
+.practice-tabs button { display: flex; align-items: center; justify-content: center; gap: 7px; border: 0; border-bottom: 2px solid transparent; padding: 12px 6px; background: transparent; color: #81908e; cursor: pointer; font-size: 11px; font-weight: 750; }
+.practice-tabs button b { display: grid; place-items: center; width: 18px; height: 18px; border-radius: 50%; background: #edf0ec; font-size: 8px; }
+.practice-tabs button.active { border-bottom-color: var(--teal); color: var(--teal); }
+.practice-tabs button.active b { background: var(--teal); color: white; }
+.focus-transcript, .role-practice, .focus-output { flex: 1; padding: 20px 34px 25px; }
+.transcript-tip { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+.transcript-tip span, .role-practice > span, .focus-output > span { color: #849390; font-size: 8px; font-weight: 800; letter-spacing: .12em; }
+.transcript-tip button { border: 0; background: transparent; color: var(--teal); cursor: pointer; font-size: 9px; }
+.focus-turn { display: grid; grid-template-columns: 30px minmax(0, 1fr); gap: 11px; margin-bottom: 11px; }
+.focus-turn > span { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50% 50% 50% 9px; background: #d9eee3; color: var(--teal); font-family: Georgia, serif; font-size: 12px; font-weight: 700; }
+.focus-turn.neil > span { border-radius: 50% 50% 9px 50%; background: #f0e5c5; color: #7b5d1d; }
+.focus-turn > div { max-width: 92%; border-radius: 4px 15px 15px 15px; padding: 11px 14px; background: #f0f5f1; }
+.focus-turn.neil > div { background: #faf3df; }
+.focus-turn strong { color: #758784; font-size: 8px; text-transform: uppercase; }
+.focus-turn p { margin: 4px 0 0; font-family: Georgia, serif; font-size: 14px; line-height: 1.62; }
+.focus-turn mark, .role-script mark { border-radius: 3px; padding: 1px 2px; background: #f5d57a; color: var(--ink); }
+.focus-text-hidden { display: grid; place-items: center; width: 100%; min-height: 220px; border: 1px dashed #c7d4ce; border-radius: 15px; background: #f4f7f3; color: var(--teal); cursor: pointer; font-size: 11px; }
+.role-practice { display: grid; align-content: start; gap: 14px; }
+.role-choice { display: flex; flex-wrap: wrap; gap: 8px; }
+.role-choice button { border: 1px solid #bcd0c7; border-radius: 999px; padding: 9px 13px; background: #edf5f1; color: var(--teal); cursor: pointer; font-size: 10px; font-weight: 750; }
+.role-choice button.active { border-color: var(--teal); background: var(--teal); color: white; }
+.role-empty { display: grid; place-items: center; min-height: 210px; margin: 3px 0 0; border: 1px dashed #cad4cf; border-radius: 15px; color: #879795; font-size: 11px; }
+.role-script { display: grid; gap: 8px; }
+.role-script > div { display: grid; grid-template-columns: 65px minmax(0, 1fr); gap: 10px; border-radius: 11px; padding: 10px 12px; background: #f4f5f0; }
+.role-script > div > strong { color: var(--teal); font-size: 8px; text-transform: uppercase; }
+.role-script p { margin: 0; font-family: Georgia, serif; font-size: 13px; line-height: 1.55; }
+.role-script .your-line { background: #183238; color: white; }
+.role-script .your-line button { border: 0; background: transparent; color: var(--mint); cursor: pointer; text-align: left; font-size: 10px; }
+.focus-output { display: grid; align-content: start; gap: 10px; }
+.focus-output h3 { max-width: 650px; margin: 2px 0 6px; font-family: Georgia, serif; font-size: 22px; font-weight: 500; line-height: 1.4; }
+.focus-output textarea { min-height: 155px; resize: vertical; border: 1px solid #ced8d3; border-radius: 14px; padding: 15px; background: #fafaf6; color: var(--ink); font: inherit; line-height: 1.6; }
+.focus-output textarea:focus { outline: 2px solid var(--mint); border-color: var(--teal); }
+.focus-output > div { display: flex; justify-content: space-between; }
+.focus-output small { color: #849390; }
+.focus-output button { border: 0; background: transparent; color: var(--teal); cursor: pointer; font-size: 10px; font-weight: 800; }
+.focus-output > p { margin: 3px 0 0; border-left: 3px solid var(--mint); padding: 10px 12px; background: #edf5f1; color: #49625d; font-family: Georgia, serif; font-size: 13px; line-height: 1.6; }
+.focus-next { display: flex; align-items: center; justify-content: space-between; border-top: 1px solid #e3e5e0; padding: 13px 34px; }
+.focus-next span { color: #8b9997; font-size: 9px; }
+.focus-next button { border: 0; border-radius: 999px; padding: 9px 13px; background: var(--ink); color: white; cursor: pointer; font-size: 9px; font-weight: 750; }
+.focus-next button:disabled { opacity: .28; cursor: not-allowed; }
+
 @media (max-width: 780px) {
   .topbar { height: 70px; padding: 0 18px; }
   .streak { padding: 8px 10px; font-size: 11px; }
@@ -456,6 +545,10 @@ button { color: inherit; }
   .article-library-entry .primary-button { justify-content: center; }
   .shadowing-header { border-radius: 20px 20px 20px 6px; }
   .shadowing-recap { grid-template-columns: 1fr; }
+  .shadowing-studio { grid-template-columns: 205px minmax(0, 1fr); }
+  .shadowing-playlist { padding-left: 11px; padding-right: 11px; }
+  .focus-heading, .focus-transcript, .role-practice, .focus-output { padding-left: 22px; padding-right: 22px; }
+  .focus-player, .practice-tabs { margin-left: 22px; margin-right: 22px; }
 }
 
 @media (max-width: 420px) {
@@ -507,4 +600,20 @@ button { color: inherit; }
   .shadowing-turn { grid-template-columns: 56px minmax(0, 1fr); gap: 7px; }
   .shadowing-turn p { font-size: 15px; }
   .shadowing-audio-controls > span { width: 100%; margin-left: 0; }
+  .shadowing-studio { display: block; border-radius: 20px 20px 20px 6px; }
+  .shadowing-playlist { border-right: 0; padding: 20px 14px 13px; }
+  .playlist-heading { padding-bottom: 12px; }
+  .playlist-heading h2 { font-size: 20px; }
+  .shadowing-playlist nav { display: flex; overflow-x: auto; padding-bottom: 4px; }
+  .shadowing-playlist nav > button { flex: 0 0 180px; }
+  .playlist-recap, .shadowing-playlist > a { display: none; }
+  .focus-heading { padding: 23px 17px 15px; }
+  .focus-heading h2 { font-size: 29px; }
+  .focus-player { grid-template-columns: 44px minmax(80px, 1fr) auto; margin: 0 17px; }
+  .focus-speed { grid-column: 1 / -1; justify-content: flex-end; border-top: 1px solid #c7d7d0; border-left: 0; padding: 8px 0 0; }
+  .practice-tabs { margin: 18px 17px 0; }
+  .practice-tabs button { font-size: 10px; }
+  .focus-transcript, .role-practice, .focus-output { padding: 17px; }
+  .focus-turn > div { max-width: 100%; }
+  .focus-next { padding: 13px 17px; }
 }
