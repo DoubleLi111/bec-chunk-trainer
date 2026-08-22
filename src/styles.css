@@ -101,6 +101,7 @@ button { color: inherit; }
 .reveal-hint { color: #d6dedc; font-size: 13px; }
 .answer-panel { width: min(570px, 100%); padding-top: 20px; border-top: 1px solid rgba(255,255,255,.25); }
 .answer-panel p { margin: 0 0 12px; font-family: Georgia, serif; font-size: clamp(25px, 3.5vw, 38px); }
+.answer-panel .chunk-ipa { margin: -2px 0 14px; font-family: Inter, "Helvetica Neue", sans-serif; font-size: clamp(14px, 2vw, 18px); line-height: 1.55; color: #d9f1e4; }
 .answer-panel small { color: #d9f1e4; line-height: 1.6; }
 
 .example-line { display: grid; grid-template-columns: 90px 1fr; align-items: baseline; gap: 12px; padding: 20px 6px 0; }
