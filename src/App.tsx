@@ -1455,6 +1455,8 @@ export default function Home() {
   const [playingShadowClip, setPlayingShadowClip] = useState<number | null>(null);
   const [loopingShadowClip, setLoopingShadowClip] = useState<number | null>(null);
   const [shadowingSpeed, setShadowingSpeed] = useState(1);
+  const [activeShadowClipId, setActiveShadowClipId] = useState(1);
+  const [shadowingStep, setShadowingStep] = useState<"listen" | "role" | "output">("listen");
   const [hiddenShadowText, setHiddenShadowText] = useState<number[]>([]);
   const [hiddenShadowSpeaker, setHiddenShadowSpeaker] = useState<Record<number, string>>({});
   const [shadowAnswers, setShadowAnswers] = useState<Record<number, string>>({});
@@ -2071,119 +2073,121 @@ export default function Home() {
           )}
 
           {tab === "shadowing" && (
-            <section className="shadowing-stage">
-              <header className="shadowing-header">
-                <div>
-                  <span>{activeShadowing.date} · LISTEN, IMITATE, RESPOND</span>
-                  <p>{activeShadowing.subtitle}</p>
-                </div>
-                <a href={activeUnit.sourceUrl} target="_blank" rel="noreferrer">查看原始课程 <span>↗</span></a>
-              </header>
-
-              <div className="shadowing-toolbar">
-                <div>
-                  <strong>原声速度</strong>
-                  <span>先听完整对话，再循环模仿；熟悉后隐藏一位说话人的台词。</span>
-                </div>
-                <div className="speed-options" role="group" aria-label="原声播放速度">
-                  {[0.75, 0.9, 1].map((speed) => (
-                    <button type="button" className={shadowingSpeed === speed ? "active" : ""} key={speed} onClick={() => setShadowingSpeed(speed)}>{speed}×</button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="shadowing-clips">
-                {activeShadowing.clips.map((clip, index) => {
-                  const textHidden = hiddenShadowText.includes(clip.id);
-                  const hiddenSpeaker = hiddenShadowSpeaker[clip.id];
-                  const speakers = [...new Set(clip.turns.map((turn) => turn.speaker))];
-                  const isPlaying = playingShadowClip === clip.id;
-                  const isLooping = loopingShadowClip === clip.id;
-                  const referenceRevealed = revealedShadowReferences.includes(clip.id);
-                  return (
-                    <article className={`shadowing-clip ${isPlaying ? "playing" : ""}`} key={clip.id}>
-                      <div className="shadowing-clip-heading">
-                        <div className="shadowing-clip-number">{String(index + 1).padStart(2, "0")}</div>
-                        <div>
-                          <span>{clip.goal}</span>
-                          <h2>{clip.title}</h2>
-                        </div>
-                      </div>
-
-                      <div className="shadowing-audio-controls">
-                        <button type="button" className={isPlaying && !isLooping ? "active" : ""} onClick={() => playShadowingClip(clip, false)}>
-                          {isPlaying && !isLooping ? "■ 停止" : "▶ 听完整对话"}
+            (() => {
+              const clip = activeShadowing.clips.find((item) => item.id === activeShadowClipId) ?? activeShadowing.clips[0];
+              const clipIndex = activeShadowing.clips.findIndex((item) => item.id === clip.id);
+              const speakers = [...new Set(clip.turns.map((turn) => turn.speaker))];
+              const hiddenSpeaker = hiddenShadowSpeaker[clip.id];
+              const isPlaying = playingShadowClip === clip.id;
+              const isLooping = loopingShadowClip === clip.id;
+              const referenceRevealed = revealedShadowReferences.includes(clip.id);
+              return (
+                <section className="shadowing-studio">
+                  <aside className="shadowing-playlist">
+                    <div className="playlist-heading">
+                      <span>REAL EASY ENGLISH</span>
+                      <h2>Talking about coffee</h2>
+                      <p>{activeShadowing.date}</p>
+                    </div>
+                    <nav aria-label="对话切片">
+                      {activeShadowing.clips.map((item, index) => (
+                        <button
+                          type="button"
+                          className={item.id === clip.id ? "active" : ""}
+                          key={item.id}
+                          onClick={() => { stopShadowAudio(); setActiveShadowClipId(item.id); setShadowingStep("listen"); }}
+                        >
+                          <b>{String(index + 1).padStart(2, "0")}</b>
+                          <span><strong>{item.title}</strong><small>{item.goal}</small></span>
+                          <i>{Math.round(item.end - item.start)}s</i>
                         </button>
-                        <button type="button" className={isLooping ? "active loop" : ""} onClick={() => playShadowingClip(clip, true)}>
-                          {isLooping ? "■ 停止循环" : "↻ 循环模仿"}
+                      ))}
+                    </nav>
+                    <details className="playlist-recap">
+                      <summary>本课词汇回顾 <span>＋</span></summary>
+                      {activeShadowing.recap.map((item) => (
+                        <button type="button" key={item.expression} onClick={() => speak(item.expression)}>
+                          <span><strong>{item.expression}</strong><small>{item.ipa ?? item.chinese}</small></span><b>▶</b>
                         </button>
-                        <span>{Math.round(clip.end - clip.start)} 秒原声</span>
-                      </div>
+                      ))}
+                    </details>
+                    <a href={activeUnit.sourceUrl} target="_blank" rel="noreferrer">BBC原始课程 ↗</a>
+                  </aside>
 
-                      <div className="shadowing-mode-row">
-                        <button type="button" className={textHidden ? "active" : ""} onClick={() => setHiddenShadowText((current) => current.includes(clip.id) ? current.filter((id) => id !== clip.id) : [...current, clip.id])}>
-                          {textHidden ? "显示全部文本" : "隐藏全部文本"}
-                        </button>
-                        {speakers.map((speaker) => (
-                          <button type="button" className={hiddenSpeaker === speaker ? "active" : ""} key={speaker} onClick={() => setHiddenShadowSpeaker((current) => ({ ...current, [clip.id]: current[clip.id] === speaker ? "" : speaker }))}>
-                            {hiddenSpeaker === speaker ? `显示 ${speaker}` : `我来扮演 ${speaker}`}
-                          </button>
-                        ))}
+                  <article className="shadowing-focus">
+                    <header className="focus-heading">
+                      <div>
+                        <span>CLIP {String(clipIndex + 1).padStart(2, "0")} · {clip.goal}</span>
+                        <h2>{clip.title}</h2>
                       </div>
+                      <span>{Math.round(clip.end - clip.start)} SEC</span>
+                    </header>
 
-                      <div className={`shadowing-transcript ${textHidden ? "hidden" : ""}`}>
-                        {textHidden ? (
-                          <button type="button" className="shadowing-reveal" onClick={() => setHiddenShadowText((current) => current.filter((id) => id !== clip.id))}>文本已隐藏 · 点击查看</button>
-                        ) : clip.turns.map((turn, turnIndex) => (
-                          <div className={`shadowing-turn ${hiddenSpeaker === turn.speaker ? "role-hidden" : ""}`} key={`${turn.speaker}-${turnIndex}`}>
-                            <strong>{turn.speaker}</strong>
-                            {hiddenSpeaker === turn.speaker
-                              ? <button type="button" onClick={() => setHiddenShadowSpeaker((current) => ({ ...current, [clip.id]: "" }))}>轮到你接话 · 点击查看原句</button>
-                              : <p>{renderDialogueText(turn)}</p>}
+                    <div className="focus-player">
+                      <button type="button" className={`focus-play ${isPlaying && !isLooping ? "playing" : ""}`} onClick={() => playShadowingClip(clip, false)} aria-label={isPlaying && !isLooping ? "停止" : "播放原声"}>
+                        {isPlaying && !isLooping ? "■" : "▶"}
+                      </button>
+                      <div className="focus-track">
+                        <strong>{isPlaying ? (isLooping ? "正在循环模仿" : "正在播放原声") : "听一遍，再开口"}</strong>
+                        <div><i className={isPlaying ? "moving" : ""} /></div>
+                      </div>
+                      <button type="button" className={isLooping ? "active" : ""} onClick={() => playShadowingClip(clip, true)}>{isLooping ? "停止循环" : "↻ 循环"}</button>
+                      <div className="focus-speed" role="group" aria-label="播放速度">
+                        {[0.75, 0.9, 1].map((speed) => <button type="button" className={shadowingSpeed === speed ? "active" : ""} key={speed} onClick={() => setShadowingSpeed(speed)}>{speed}×</button>)}
+                      </div>
+                    </div>
+
+                    <div className="practice-tabs" role="tablist" aria-label="模仿步骤">
+                      <button type="button" className={shadowingStep === "listen" ? "active" : ""} onClick={() => setShadowingStep("listen")}><b>1</b> 听与跟读</button>
+                      <button type="button" className={shadowingStep === "role" ? "active" : ""} onClick={() => setShadowingStep("role")}><b>2</b> 角色接话</button>
+                      <button type="button" className={shadowingStep === "output" ? "active" : ""} onClick={() => setShadowingStep("output")}><b>3</b> 我的表达</button>
+                    </div>
+
+                    {shadowingStep === "listen" && (
+                      <div className="focus-transcript">
+                        <div className="transcript-tip"><span>重点意群已标记</span><button type="button" onClick={() => setHiddenShadowText((current) => current.includes(clip.id) ? current.filter((id) => id !== clip.id) : [...current, clip.id])}>{hiddenShadowText.includes(clip.id) ? "显示文本" : "隐藏文本"}</button></div>
+                        {hiddenShadowText.includes(clip.id) ? (
+                          <button type="button" className="focus-text-hidden" onClick={() => setHiddenShadowText((current) => current.filter((id) => id !== clip.id))}>不看文本跟一遍 · 点击恢复</button>
+                        ) : clip.turns.map((turn, index) => (
+                          <div className={`focus-turn ${turn.speaker.toLowerCase()}`} key={`${turn.speaker}-${index}`}>
+                            <span>{turn.speaker.slice(0, 1)}</span><div><strong>{turn.speaker}</strong><p>{renderDialogueText(turn)}</p></div>
                           </div>
                         ))}
                       </div>
+                    )}
 
-                      <div className="shadowing-output">
-                        <span>YOUR TURN · 脱稿回答</span>
-                        <strong>{clip.outputQuestion}</strong>
-                        <textarea
-                          value={shadowAnswers[clip.id] ?? ""}
-                          onChange={(event) => setShadowAnswers((current) => ({ ...current, [clip.id]: event.target.value }))}
-                          placeholder="先口头回答，再把自己的版本写在这里……"
-                          aria-label={`${clip.title} 个性化回答`}
-                        />
-                        <div>
-                          <small>{(shadowAnswers[clip.id] ?? "").trim().split(/\s+/).filter(Boolean).length} words</small>
-                          <button type="button" onClick={() => setRevealedShadowReferences((current) => current.includes(clip.id) ? current.filter((id) => id !== clip.id) : [...current, clip.id])}>
-                            {referenceRevealed ? "隐藏参考" : "查看参考表达"}
-                          </button>
+                    {shadowingStep === "role" && (
+                      <div className="role-practice">
+                        <span>选择你要扮演的角色</span>
+                        <div className="role-choice">
+                          {speakers.map((speaker) => <button type="button" className={hiddenSpeaker === speaker ? "active" : ""} key={speaker} onClick={() => setHiddenShadowSpeaker((current) => ({ ...current, [clip.id]: speaker }))}>我来扮演 {speaker}</button>)}
                         </div>
-                        {referenceRevealed && <p className="shadowing-reference">{clip.outputReference}</p>}
+                        {!hiddenSpeaker ? <p className="role-empty">选择角色后，他/她的台词会被隐藏。播放原声，在停顿处接话。</p> : (
+                          <div className="role-script">
+                            {clip.turns.map((turn, index) => <div className={turn.speaker === hiddenSpeaker ? "your-line" : ""} key={`${turn.speaker}-${index}`}><strong>{turn.speaker}</strong>{turn.speaker === hiddenSpeaker ? <button type="button" onClick={() => setHiddenShadowSpeaker((current) => ({ ...current, [clip.id]: "" }))}>轮到你说 · 点击偷看</button> : <p>{renderDialogueText(turn)}</p>}</div>)}
+                          </div>
+                        )}
                       </div>
-                    </article>
-                  );
-                })}
-              </div>
+                    )}
 
-              <section className="shadowing-recap">
-                <div>
-                  <span>VOCABULARY RECAP</span>
-                  <h2>听完对话，再集中复习。</h2>
-                  <p>这一部分不做整段模仿，只用于确认词义、发音和固定搭配。</p>
-                </div>
-                <div className="shadowing-recap-list">
-                  {activeShadowing.recap.map((item) => (
-                    <article key={item.expression}>
-                      <strong>{item.expression}</strong>
-                      {item.ipa && <span>{item.ipa}</span>}
-                      <p>{item.chinese}</p>
-                      <button type="button" onClick={() => speak(item.expression)}>▶</button>
-                    </article>
-                  ))}
-                </div>
-              </section>
-            </section>
+                    {shadowingStep === "output" && (
+                      <div className="focus-output">
+                        <span>YOUR TURN · 先说，再写</span>
+                        <h3>{clip.outputQuestion}</h3>
+                        <textarea value={shadowAnswers[clip.id] ?? ""} onChange={(event) => setShadowAnswers((current) => ({ ...current, [clip.id]: event.target.value }))} placeholder="用自己的真实情况回答……" />
+                        <div><small>{(shadowAnswers[clip.id] ?? "").trim().split(/\s+/).filter(Boolean).length} words</small><button type="button" onClick={() => setRevealedShadowReferences((current) => current.includes(clip.id) ? current.filter((id) => id !== clip.id) : [...current, clip.id])}>{referenceRevealed ? "隐藏参考" : "查看参考表达"}</button></div>
+                        {referenceRevealed && <p>{clip.outputReference}</p>}
+                      </div>
+                    )}
+
+                    <footer className="focus-next">
+                      <span>{clipIndex + 1} / {activeShadowing.clips.length}</span>
+                      <button type="button" disabled={clipIndex === activeShadowing.clips.length - 1} onClick={() => { const next = activeShadowing.clips[clipIndex + 1]; if (next) { stopShadowAudio(); setActiveShadowClipId(next.id); setShadowingStep("listen"); } }}>下一段对话 →</button>
+                    </footer>
+                  </article>
+                </section>
+              );
+            })()
           )}
 
           {tab === "article" && (
