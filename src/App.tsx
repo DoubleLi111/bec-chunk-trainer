@@ -35,6 +35,18 @@ type Progress = Record<number, { correct: number; wrong: number }>;
 
 type ActivityTab = "learn" | "quiz" | "build" | "article";
 
+type QuizKind = "visual" | "audio" | "cloze" | "context" | "zh-to-en" | "en-to-zh";
+
+type QuizQuestion = {
+  key: string;
+  chunkId: number;
+  kind: QuizKind;
+  prompt: string;
+  answer: string;
+  options: string[];
+  visual?: string;
+};
+
 type ActivityPicker = {
   activity: ActivityTab;
   step: "book" | "category" | "unit";
@@ -1159,6 +1171,112 @@ function recordDailyResult(mode: DailyModeProgress, itemId: number, isCorrect: b
   return { pending, review, done };
 }
 
+const visualQuizClues: Record<number, string> = {
+  3: "💼  9️⃣ → 5️⃣",
+  6: "🪪 → 🚪",
+  7: "⏱️ 🏢",
+  101: "💡 ↔️ 💬",
+  104: "🧍‍♀️　⚽🏟️",
+  108: "⚽　🥅 ↔️",
+  109: "⚖️　🏟️",
+  205: "🏠 👨‍👩‍👧",
+  209: "🚪 ← 🏢",
+  215: "💰 → 📦",
+  223: "🤝 🍽️",
+  230: "👔 ⬆️⬇️ 👥",
+  231: "📱 🔥 💬",
+  240: "😟 🥂",
+};
+
+function shuffle<T>(items: T[]) {
+  const result = [...items];
+  for (let index = result.length - 1; index > 0; index -= 1) {
+    const target = Math.floor(Math.random() * (index + 1));
+    [result[index], result[target]] = [result[target], result[index]];
+  }
+  return result;
+}
+
+function uniqueChunks() {
+  const byId = new Map<number, Chunk>();
+  contentLibrary.forEach((book) => book.units.forEach((unit) => unit.chunks.forEach((chunk) => byId.set(chunk.id, chunk))));
+  return [...byId.values()];
+}
+
+function optionSet(answer: string, candidates: string[]) {
+  const distractors = shuffle([...new Set(candidates.filter((item) => normalize(item) !== normalize(answer))) ]).slice(0, 3);
+  return shuffle([answer, ...distractors]);
+}
+
+function keyWordFor(chunk: Chunk) {
+  const ignored = new Set(["somebody", "something", "someone", "people", "children", "years", "english"]);
+  const words = chunk.english.match(/[A-Za-z]+(?:-[A-Za-z]+)*/g) ?? [];
+  return [...words].filter((word) => !ignored.has(word.toLowerCase())).sort((a, b) => b.length - a.length)[0] ?? words[0] ?? chunk.english;
+}
+
+function buildQuizQuestions(chunks: Chunk[], previousWrongIds: number[]) {
+  const total = Math.min(20, chunks.length);
+  const byId = new Map(chunks.map((chunk) => [chunk.id, chunk]));
+  const priority = shuffle(previousWrongIds.map((id) => byId.get(id)).filter((chunk): chunk is Chunk => Boolean(chunk)));
+  const visualPool = shuffle(chunks.filter((chunk) => visualQuizClues[chunk.id] && !priority.some((item) => item.id === chunk.id))).slice(0, 4);
+  const selected = [...priority, ...visualPool];
+  shuffle(chunks).forEach((chunk) => {
+    if (selected.length < total && !selected.some((item) => item.id === chunk.id)) selected.push(chunk);
+  });
+
+  const chosen = selected.slice(0, total);
+  const visualIds = new Set(visualPool.map((chunk) => chunk.id));
+  const otherKinds: QuizKind[] = ["audio", "cloze", "context", "zh-to-en", "en-to-zh"];
+  let kindIndex = 0;
+
+  return shuffle(chosen.map((chunk) => {
+    const kind: QuizKind = visualIds.has(chunk.id) ? "visual" : otherKinds[kindIndex++ % otherKinds.length];
+    if (kind === "visual") {
+      return {
+        key: `${chunk.id}-visual`, chunkId: chunk.id, kind,
+        prompt: "根据画面选择最贴切的英文意群",
+        visual: visualQuizClues[chunk.id], answer: chunk.english,
+        options: optionSet(chunk.english, chunks.map((item) => item.english)),
+      };
+    }
+    if (kind === "audio") {
+      return {
+        key: `${chunk.id}-audio`, chunkId: chunk.id, kind,
+        prompt: "听英式发音，选择你听到的意群", answer: chunk.english,
+        options: optionSet(chunk.english, chunks.map((item) => item.english)),
+      };
+    }
+    if (kind === "cloze") {
+      const answer = keyWordFor(chunk);
+      const blank = chunk.english.replace(new RegExp(escapeRegExp(answer), "i"), "______");
+      return {
+        key: `${chunk.id}-cloze`, chunkId: chunk.id, kind,
+        prompt: `${blank}\n${chunk.chinese}`, answer,
+        options: optionSet(answer, chunks.map(keyWordFor)),
+      };
+    }
+    if (kind === "context") {
+      return {
+        key: `${chunk.id}-context`, chunkId: chunk.id, kind,
+        prompt: chunk.example, answer: chunk.english,
+        options: optionSet(chunk.english, chunks.map((item) => item.english)),
+      };
+    }
+    if (kind === "zh-to-en") {
+      return {
+        key: `${chunk.id}-zh-to-en`, chunkId: chunk.id, kind,
+        prompt: chunk.chinese, answer: chunk.english,
+        options: optionSet(chunk.english, chunks.map((item) => item.english)),
+      };
+    }
+    return {
+      key: `${chunk.id}-en-to-zh`, chunkId: chunk.id, kind,
+      prompt: chunk.english, answer: chunk.chinese,
+      options: optionSet(chunk.chinese, chunks.map((item) => item.chinese)),
+    };
+  }));
+}
+
 export default function Home() {
   const [tab, setTab] = useState<"learn" | "quiz" | "build" | "article" | "manage">("learn");
   const [activeBookId, setActiveBookId] = useState(defaultBook.id);
@@ -1174,8 +1292,12 @@ export default function Home() {
   const [dailyPractice, setDailyPractice] = useState<DailyPractice>({});
   const [cardIndex, setCardIndex] = useState(0);
   const [revealed, setRevealed] = useState(false);
-  const [answer, setAnswer] = useState("");
   const [feedback, setFeedback] = useState<"correct" | "wrong" | null>(null);
+  const [selectedQuizAnswer, setSelectedQuizAnswer] = useState("");
+  const [quizQuestions, setQuizQuestions] = useState<QuizQuestion[]>([]);
+  const [quizIndex, setQuizIndex] = useState(0);
+  const [quizReview, setQuizReview] = useState<QuizQuestion[]>([]);
+  const [quizWrongIds, setQuizWrongIds] = useState<number[]>([]);
   const [selectedParts, setSelectedParts] = useState<number[]>([]);
   const [sentenceFeedback, setSentenceFeedback] = useState<"correct" | "wrong" | null>(null);
   const [scenarioAnswer, setScenarioAnswer] = useState("");
@@ -1192,6 +1314,7 @@ export default function Home() {
     const savedChunks = window.localStorage.getItem("bec-chunks");
     const savedProgress = window.localStorage.getItem("bec-progress");
     const savedDailyPractice = window.localStorage.getItem("bec-daily-practice");
+    const savedQuizWrongIds = window.localStorage.getItem("bec-global-quiz-wrong");
     if (savedChunks) {
       try {
         const personalChunks = JSON.parse(savedChunks) as Chunk[];
@@ -1216,6 +1339,13 @@ export default function Home() {
         setDailyPractice({});
       }
     }
+    if (savedQuizWrongIds) {
+      try {
+        setQuizWrongIds(JSON.parse(savedQuizWrongIds));
+      } catch {
+        setQuizWrongIds([]);
+      }
+    }
     setHydrated(true);
   }, []);
 
@@ -1225,6 +1355,11 @@ export default function Home() {
     window.localStorage.setItem("bec-progress", JSON.stringify(progress));
     window.localStorage.setItem("bec-daily-practice", JSON.stringify(dailyPractice));
   }, [chunks, progress, dailyPractice, hydrated]);
+
+  useEffect(() => {
+    if (!hydrated) return;
+    window.localStorage.setItem("bec-global-quiz-wrong", JSON.stringify(quizWrongIds));
+  }, [quizWrongIds, hydrated]);
 
   const stats = useMemo(() => {
     const attempts = Object.values(progress).reduce(
@@ -1244,15 +1379,15 @@ export default function Home() {
 
   const currentCard = chunks[cardIndex % chunks.length] ?? starterChunks[0];
   const dailyKey = `${localDateKey()}::${activeBook.id}::${activeUnit.id}`;
-  const quizMode = prepareDailyMode(dailyPractice[dailyKey]?.quiz, chunks.map((chunk) => chunk.id));
   const buildMode = prepareDailyMode(dailyPractice[dailyKey]?.build, activeUnit.sentences.map((_, index) => index));
-  const currentQuizId = quizMode.pending[0] ?? quizMode.review[0];
   const currentSentenceId = buildMode.pending[0] ?? buildMode.review[0];
-  const currentQuiz = chunks.find((chunk) => chunk.id === currentQuizId);
   const currentSentence = activeUnit.sentences[currentSentenceId];
-  const quizComplete = currentQuizId === undefined;
+  const allQuizChunks = useMemo(() => uniqueChunks(), []);
+  const quizInReview = quizIndex >= quizQuestions.length;
+  const currentQuizQuestion = quizInReview ? quizReview[0] : quizQuestions[quizIndex];
+  const currentQuizChunk = allQuizChunks.find((chunk) => chunk.id === currentQuizQuestion?.chunkId);
+  const quizComplete = quizQuestions.length > 0 && quizInReview && quizReview.length === 0;
   const buildComplete = currentSentenceId === undefined;
-  const quizPhase = quizMode.pending.length ? "first" : quizMode.review.length ? "review" : "done";
   const buildPhase = buildMode.pending.length ? "first" : buildMode.review.length ? "review" : "done";
   const accuracy = stats.attempts
     ? Math.round((stats.correct / stats.attempts) * 100)
@@ -1316,33 +1451,53 @@ export default function Home() {
     void audio.play().catch(() => setPlayingArticleSentence(null));
   }
 
-  function checkAnswer(event: React.FormEvent) {
-    event.preventDefault();
-    if (!answer.trim() || feedback || !currentQuiz) return;
-    const isCorrect = normalize(answer) === normalize(currentQuiz.english);
+  function answerQuiz(option: string) {
+    if (!currentQuizQuestion || feedback) return;
+    const isCorrect = normalize(option) === normalize(currentQuizQuestion.answer);
+    setSelectedQuizAnswer(option);
     setFeedback(isCorrect ? "correct" : "wrong");
+    const chunkId = currentQuizQuestion.chunkId;
     setProgress((current) => ({
       ...current,
-      [currentQuiz.id]: {
-        correct: (current[currentQuiz.id]?.correct ?? 0) + (isCorrect ? 1 : 0),
-        wrong: (current[currentQuiz.id]?.wrong ?? 0) + (isCorrect ? 0 : 1),
+      [chunkId]: {
+        correct: (current[chunkId]?.correct ?? 0) + (isCorrect ? 1 : 0),
+        wrong: (current[chunkId]?.wrong ?? 0) + (isCorrect ? 0 : 1),
       },
     }));
+    if (!isCorrect) {
+      setQuizWrongIds((current) => current.includes(chunkId) ? current : [...current, chunkId]);
+    }
   }
 
   function nextQuestion() {
-    if (!feedback || !currentQuiz) return;
+    if (!feedback || !currentQuizQuestion) return;
     const isCorrect = feedback === "correct";
-    setDailyPractice((current) => {
-      const entry = current[dailyKey] ?? {};
-      const mode = prepareDailyMode(entry.quiz, chunks.map((chunk) => chunk.id));
-      return {
-        ...current,
-        [dailyKey]: { ...entry, quiz: recordDailyResult(mode, currentQuiz.id, isCorrect) },
-      };
-    });
-    setAnswer("");
+    if (isCorrect) setQuizWrongIds((current) => current.filter((id) => id !== currentQuizQuestion.chunkId));
+    if (quizInReview) {
+      setQuizReview((current) => isCorrect ? current.slice(1) : [...current.slice(1), current[0]]);
+    } else {
+      if (!isCorrect) {
+        setQuizReview((current) => current.some((question) => question.chunkId === currentQuizQuestion.chunkId)
+          ? current
+          : [...current, currentQuizQuestion]);
+      }
+      setQuizIndex((current) => current + 1);
+    }
+    setSelectedQuizAnswer("");
     setFeedback(null);
+  }
+
+  function startGlobalQuiz() {
+    window.speechSynthesis?.cancel();
+    setQuizQuestions(buildQuizQuestions(allQuizChunks, quizWrongIds));
+    setQuizIndex(0);
+    setQuizReview([]);
+    setSelectedQuizAnswer("");
+    setFeedback(null);
+    setSpeakingText(null);
+    setActivityPicker(null);
+    setLibraryPicker(null);
+    setTab("quiz");
   }
 
   function choosePart(index: number) {
@@ -1383,8 +1538,8 @@ export default function Home() {
     setChunks(unit.chunks);
     setCardIndex(0);
     setRevealed(false);
-    setAnswer("");
     setFeedback(null);
+    setSelectedQuizAnswer("");
     setSelectedParts([]);
     setSentenceFeedback(null);
     setSpeakingText(null);
@@ -1411,6 +1566,10 @@ export default function Home() {
 
   function beginActivity(activity: ActivityTab) {
     setLibraryPicker(null);
+    if (activity === "quiz") {
+      startGlobalQuiz();
+      return;
+    }
     setActivityPicker({ activity, step: "book", bookId: activeBook.id, category: activeUnit.category });
   }
 
@@ -1467,7 +1626,7 @@ export default function Home() {
 
       <div className="page-grid" id="top">
         <aside className="sidebar">
-          <p className="eyebrow">{tab === "article" ? activeBook.name : activeBook.name.toUpperCase()}</p>
+          <p className="eyebrow">{tab === "quiz" ? "ALL CONTENT" : tab === "article" ? activeBook.name : activeBook.name.toUpperCase()}</p>
           <nav aria-label="学习功能">
             <button className={highlightedTab === "learn" ? "active" : ""} onClick={() => beginActivity("learn")}>
               <span>01</span> 意群卡片
@@ -1487,7 +1646,14 @@ export default function Home() {
           </nav>
 
           <div className="unit-card">
-            {tab === "article" ? (
+            {tab === "quiz" ? (
+              <>
+                <span>GLOBAL QUIZ</span>
+                <strong>全库随机测验</strong>
+                <div className="unit-progress"><i style={{ width: `${quizQuestions.length ? Math.max(8, (Math.min(quizIndex, quizQuestions.length) / quizQuestions.length) * 100) : 8}%` }} /></div>
+                <small>每轮20题 · {quizWrongIds.length} 个待清错题</small>
+              </>
+            ) : tab === "article" ? (
               <>
                 <span>{activeUnit.category}</span>
                 <strong>{activeUnit.name}</strong>
@@ -1508,12 +1674,14 @@ export default function Home() {
         <section className="content">
           <div className="hero-row">
             <div>
-              <p className="section-kicker">{tab === "article"
+              <p className="section-kicker">{tab === "quiz"
+                ? `全部内容 · ${allQuizChunks.length} 个意群`
+                : tab === "article"
                 ? `${activeBook.name} · ${activeUnit.category} · ${activeUnit.section.toUpperCase()}`
                 : `${activeUnit.category.toUpperCase()} · ${activeUnit.section.toUpperCase()}`}</p>
               {tab !== "learn" && (
                 <h1>{tab === "quiz"
-                  ? "看中文，完整想起英文意群。"
+                  ? "每次随机20题，用不同方式真正认出意群。"
                   : tab === "build"
                     ? "把意群放进真正的句子里。"
                     : tab === "article"
@@ -1577,42 +1745,55 @@ export default function Home() {
           {tab === "quiz" && quizComplete && (
             <section className="daily-complete" aria-live="polite">
               <span>✓ TODAY COMPLETE</span>
-              <h2>今天的快速测验已经全部答对。</h2>
-              <p>首轮做过的题不会再整轮重复；错题也已经全部清零，明天会自动开始新一轮。</p>
+              <h2>本轮20题及错题复习已经完成。</h2>
+              <p>系统已更新答题记录；下一轮会从全部内容中重新随机抽题。</p>
+              <button className="primary-button" type="button" onClick={startGlobalQuiz}>再随机生成20题 <span>↻</span></button>
             </section>
           )}
 
-          {tab === "quiz" && !quizComplete && currentQuiz && (
+          {tab === "quiz" && !quizComplete && currentQuizQuestion && currentQuizChunk && (
             <section className="quiz-stage" aria-live="polite">
               <div className="stage-meta">
-                <span>{quizPhase === "first" ? `首轮剩余 ${quizMode.pending.length} 题` : `错题清零 · 剩余 ${quizMode.review.length} 题`}</span>
-                <span className={`level-pill ${quizPhase === "review" ? "review" : ""}`}>{quizPhase === "first" ? "今日首轮" : "只练错题"}</span>
+                <span>{quizInReview ? `错题清零 · 剩余 ${quizReview.length} 题` : `随机题 ${quizIndex + 1} / ${quizQuestions.length}`}</span>
+                <span className={`level-pill ${quizInReview ? "review" : ""}`}>{quizInReview ? "只练错题" : "全库混合"}</span>
               </div>
               <div className="quiz-prompt">
-                <span>请写出完整意群</span>
-                <h2>{currentQuiz.chinese}</h2>
-              </div>
-              <form onSubmit={checkAnswer}>
-                <label htmlFor="quiz-answer">你的答案</label>
-                <input
-                  id="quiz-answer"
-                  value={answer}
-                  onChange={(event) => setAnswer(event.target.value)}
-                  placeholder="Type the English chunk..."
-                  autoComplete="off"
-                  disabled={feedback !== null}
-                />
-                {!feedback ? (
-                  <button className="primary-button" type="submit">检查答案 <span>↵</span></button>
+                <span>{currentQuizQuestion.kind === "visual" ? "看图猜词"
+                  : currentQuizQuestion.kind === "audio" ? "听音选意群"
+                    : currentQuizQuestion.kind === "cloze" ? "选词填空"
+                      : currentQuizQuestion.kind === "context" ? "语境匹配"
+                        : currentQuizQuestion.kind === "zh-to-en" ? "中译英选择"
+                          : "英译中选择"}</span>
+                {currentQuizQuestion.visual && <div className="visual-clue" aria-label="图片线索">{currentQuizQuestion.visual}</div>}
+                {currentQuizQuestion.kind === "audio" ? (
+                  <button className={`quiz-audio ${speakingText === chunkAudioText(currentQuizChunk) ? "speaking" : ""}`} type="button" onClick={() => speak(chunkAudioText(currentQuizChunk))}>
+                    <span>▶</span> 播放英式发音
+                  </button>
                 ) : (
-                  <div className={`feedback ${feedback}`}>
-                    <strong>{feedback === "correct" ? "答对了，很稳。" : "差一点，把这个意群整体记住。"}</strong>
-                    {feedback === "wrong" && <p>正确答案：<b>{currentQuiz.english}</b></p>}
-                    <button type="button" className="feedback-audio" onClick={() => speak(chunkAudioText(currentQuiz))}>▶ 听英式发音</button>
-                    <button type="button" onClick={nextQuestion}>{quizMode.pending.length === 1 && feedback === "correct" && quizMode.review.length === 0 ? "完成今日测验 →" : "下一题 →"}</button>
-                  </div>
+                  <h2>{currentQuizQuestion.prompt}</h2>
                 )}
-              </form>
+              </div>
+              <div className="quiz-options" role="group" aria-label="答案选项">
+                {currentQuizQuestion.options.map((option, index) => {
+                  const optionState = feedback
+                    ? normalize(option) === normalize(currentQuizQuestion.answer) ? "correct"
+                      : option === selectedQuizAnswer ? "wrong" : ""
+                    : "";
+                  return (
+                    <button key={option} className={optionState} type="button" disabled={feedback !== null} onClick={() => answerQuiz(option)}>
+                      <span>{String.fromCharCode(65 + index)}</span><strong>{option}</strong>
+                    </button>
+                  );
+                })}
+              </div>
+              {feedback && (
+                <div className={`feedback ${feedback}`}>
+                  <strong>{feedback === "correct" ? "答对了，很稳。" : "这题已记入错题，稍后会再次出现。"}</strong>
+                  {feedback === "wrong" && <p>正确答案：<b>{currentQuizQuestion.answer}</b></p>}
+                  <button type="button" className="feedback-audio" onClick={() => speak(chunkAudioText(currentQuizChunk))}>▶ 听意群英式发音</button>
+                  <button type="button" onClick={nextQuestion}>{quizInReview && quizReview.length === 1 && feedback === "correct" ? "完成本轮 →" : "下一题 →"}</button>
+                </div>
+              )}
             </section>
           )}
 
