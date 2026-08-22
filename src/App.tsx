@@ -1318,7 +1318,7 @@ export default function Home() {
     if (savedChunks) {
       try {
         const personalChunks = JSON.parse(savedChunks) as Chunk[];
-        const officialIds = new Set(starterChunks.map((chunk) => chunk.id));
+        const officialIds = new Set(uniqueChunks().map((chunk) => chunk.id));
         const personalOnly = personalChunks.filter((chunk) => !officialIds.has(chunk.id));
         setChunks([...starterChunks, ...personalOnly]);
       } catch {
