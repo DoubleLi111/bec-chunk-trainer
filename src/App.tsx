@@ -22,6 +22,7 @@ type Unit = {
   sourceUrl?: string;
   dialogueSummary?: DialogueTurn[];
   article?: ReadingArticle;
+  shadowing?: ShadowingCourse;
   scenario: Scenario;
 };
 
@@ -33,7 +34,7 @@ type Book = {
 
 type Progress = Record<number, { correct: number; wrong: number }>;
 
-type ActivityTab = "learn" | "quiz" | "build" | "article";
+type ActivityTab = "learn" | "quiz" | "build" | "shadowing" | "article";
 
 type QuizKind = "visual" | "audio" | "cloze" | "context" | "zh-to-en" | "en-to-zh";
 
@@ -63,6 +64,25 @@ type DialogueTurn = {
   speaker: string;
   text: string;
   highlights: string[];
+};
+
+type ShadowingClip = {
+  id: number;
+  title: string;
+  goal: string;
+  audioSrc: string;
+  start: number;
+  end: number;
+  turns: DialogueTurn[];
+  outputQuestion: string;
+  outputReference: string;
+};
+
+type ShadowingCourse = {
+  date: string;
+  subtitle: string;
+  clips: ShadowingClip[];
+  recap: Array<{ expression: string; chinese: string; ipa?: string }>;
 };
 
 type Scenario = {
@@ -985,6 +1005,100 @@ function defineLibrary(books: Book[]) {
   return books;
 }
 
+const coffeeChunks: Chunk[] = [
+  { id: 301, english: "How many coffees do you have a day?", chinese: "你一天喝几杯咖啡？", note: "coffees 在这里指一杯杯咖啡。", example: "How many coffees do you have a day?" },
+  { id: 302, english: "regain some energy and alertness", chinese: "恢复一些精力和清醒感", ipa: "alertness /əˈlɜːtnəs/", note: "regain 表示重新获得。", example: "I have coffee in the afternoon to regain some energy and alertness." },
+  { id: 303, english: "How do you take your coffee?", chinese: "你喜欢怎样喝咖啡？", note: "询问加不加奶、糖等，不是询问喝咖啡的动作。", example: "How do you take your coffee—black or with milk?" },
+  { id: 304, english: "have a big effect on somebody", chinese: "对某人产生很大影响", ipa: "effect /ɪˈfekt/", note: "effect 是名词，常与 have an effect on 搭配。", example: "Caffeine doesn't have a big effect on me." },
+  { id: 305, english: "have trouble sleeping", chinese: "难以入睡／睡眠有困难", note: "have trouble doing something 表示做某事有困难。", example: "I have trouble sleeping if I drink coffee too late." },
+  { id: 306, english: "cut down on coffee", chinese: "减少咖啡摄入", note: "cut down on 后接想减少的东西。", example: "I'm trying to cut down on coffee." },
+  { id: 307, english: "decaffeinated coffee / decaf", chinese: "脱咖啡因咖啡", ipa: "decaffeinated /ˌdiːˈkæfɪneɪtɪd/ · decaf /ˈdiːkæf/", note: "decaf 是 decaffeinated coffee 的常用简称。", example: "For a while, I only drank decaf." },
+  { id: 308, english: "for a while", chinese: "一段时间", note: "表示某个状态或动作持续了一段时间。", example: "For a while, I only drank decaf." },
+];
+
+const coffeeSentences: Sentence[] = [
+  { chinese: "我通常早上喝一杯咖啡。", parts: ["I usually have", "one cup of coffee", "in", "the morning."] },
+  { chinese: "你喜欢怎样喝咖啡？", parts: ["How", "do you take", "your", "coffee?"] },
+  { chinese: "如果晚上喝咖啡，我会难以入睡。", parts: ["I have trouble sleeping", "if", "I drink coffee", "in the evening."] },
+  { chinese: "我正在努力减少咖啡摄入。", parts: ["I'm trying", "to cut down on", "coffee", "at the moment."] },
+];
+
+const coffeeShadowing: ShadowingCourse = {
+  date: "21 AUG 2026",
+  subtitle: "用四段真实对话练习询问咖啡习惯、表达个人偏好，并自然回应对方。",
+  clips: [
+    {
+      id: 1,
+      title: "How much coffee?",
+      goal: "询问频率，并说明自己通常什么时候喝",
+      audioSrc: "https://open.live.bbc.co.uk/mediaselector/6/redir/version/2.0/mediaset/audio-nondrm-download-rss/proto/https/vpid/p0p5mswz.mp3",
+      start: 71.44,
+      end: 110.76,
+      turns: [
+        { speaker: "Neil", text: "How much coffee, or how many coffees if we're talking about cups of coffee – how many do you have a day?", highlights: ["how many do you have a day"] },
+        { speaker: "Georgie", text: "I usually have two. We have one cup of coffee in the morning and one usually in the afternoon, when we need to regain some energy and alertness.", highlights: ["I usually have two", "regain some energy and alertness"] },
+      ],
+      outputQuestion: "How many coffees do you have a day, and when do you usually drink them?",
+      outputReference: "I usually have one cup of coffee in the morning. Occasionally, I have another one in the afternoon.",
+    },
+    {
+      id: 2,
+      title: "How do you take it?",
+      goal: "询问咖啡的喝法，并描述加奶、糖或蜂蜜",
+      audioSrc: "https://open.live.bbc.co.uk/mediaselector/6/redir/version/2.0/mediaset/audio-nondrm-download-rss/proto/https/vpid/p0p5mswz.mp3",
+      start: 110.77,
+      end: 168.84,
+      turns: [
+        { speaker: "Georgie", text: "How we take our coffee is how we like it – what we like to put in it. For example, sugar or milk.", highlights: ["how we take our coffee"] },
+        { speaker: "Neil", text: "I like black coffee and you take your coffee white.", highlights: ["black coffee", "take your coffee white"] },
+        { speaker: "Georgie", text: "Occasionally when I'm at home I put some honey in my coffee to make it a bit sweeter.", highlights: ["put some honey in my coffee", "make it a bit sweeter"] },
+      ],
+      outputQuestion: "How do you take your coffee?",
+      outputReference: "I take my coffee with milk and no sugar. I prefer it hot, but I also enjoy iced coffee in summer.",
+    },
+    {
+      id: 3,
+      title: "Too much coffee",
+      goal: "谈论咖啡因的影响，并练习自然的惊讶回应",
+      audioSrc: "https://open.live.bbc.co.uk/mediaselector/6/redir/version/2.0/mediaset/audio-nondrm-download-rss/proto/https/vpid/p0p5mswz.mp3",
+      start: 248.70,
+      end: 284.28,
+      turns: [
+        { speaker: "Georgie", text: "What happens if you drink too much coffee?", highlights: ["drink too much coffee"] },
+        { speaker: "Neil", text: "Then it's difficult to sleep because of the caffeine. Caffeine makes you feel awake and alert.", highlights: ["difficult to sleep", "awake and alert"] },
+        { speaker: "Georgie", text: "I don't think that caffeine has a big effect on me. I don't think I have trouble sleeping if I drink too much coffee.", highlights: ["has a big effect on me", "have trouble sleeping"] },
+        { speaker: "Neil", text: "Really?", highlights: [] },
+        { speaker: "Georgie", text: "Yeah. And I can still sleep.", highlights: ["I can still sleep"] },
+        { speaker: "Neil", text: "That's crazy. Lucky you!", highlights: ["Lucky you"] },
+      ],
+      outputQuestion: "Does caffeine have a big effect on you?",
+      outputReference: "Yes, it does. If I drink coffee in the evening, I have trouble sleeping, so I usually avoid it after dinner.",
+    },
+    {
+      id: 4,
+      title: "Cut down on coffee",
+      goal: "说明是否减少咖啡或咖啡因摄入",
+      audioSrc: "https://open.live.bbc.co.uk/mediaselector/6/redir/version/2.0/mediaset/audio-nondrm-download-rss/proto/https/vpid/p0p5mswz.mp3",
+      start: 284.29,
+      end: 325.78,
+      turns: [
+        { speaker: "Georgie", text: "Neil, have you ever tried to cut down on coffee?", highlights: ["Have you ever tried to", "cut down on coffee"] },
+        { speaker: "Neil", text: "No, I haven't tried to cut down on coffee, but I've tried to cut down on caffeine.", highlights: ["cut down on coffee", "cut down on caffeine"] },
+        { speaker: "Neil", text: "For a while, I only drank decaffeinated coffee, or decaf, as we call it.", highlights: ["For a while", "decaffeinated coffee", "decaf"] },
+        { speaker: "Georgie", text: "And how was that?", highlights: ["how was that"] },
+      ],
+      outputQuestion: "Have you ever tried to cut down on coffee? Why or why not?",
+      outputReference: "No, I haven't, because I don't drink much coffee. But I would choose decaf if caffeine started to affect my sleep.",
+    },
+  ],
+  recap: [
+    { expression: "take your coffee black / white", chinese: "喝不加奶／加奶的咖啡" },
+    { expression: "caffeine", chinese: "咖啡因", ipa: "/ˈkæfiːn/" },
+    { expression: "decaffeinated / decaf", chinese: "脱咖啡因的／脱咖啡因咖啡", ipa: "/ˌdiːˈkæfɪneɪtɪd/ · /ˈdiːkæf/" },
+    { expression: "cut down on / cut back on", chinese: "减少……的摄入或使用" },
+  ],
+};
+
 const contentLibrary = defineLibrary([
   {
     id: "business-vocabulary-in-use",
@@ -1089,6 +1203,29 @@ const contentLibrary = defineLibrary([
       },
     ],
   },
+  {
+    id: "bbc-learning-english",
+    name: "BBC Learning English",
+    units: [
+      {
+        id: "real-easy-english-talking-about-coffee",
+        category: "Real Easy English",
+        name: "Talking about coffee",
+        section: "Listening & speaking · A1–A2",
+        chunks: coffeeChunks,
+        sentences: coffeeSentences,
+        sourceUrl: "https://www.bbc.co.uk/learningenglish/english/features/real-easy-english/260821",
+        shadowing: coffeeShadowing,
+        scenario: {
+          label: "ONE-MINUTE SPEAKING",
+          question: "Tell someone about your coffee-drinking habits.",
+          prompt: "使用 how many coffees、take my coffee、have trouble sleeping 和 cut down on。",
+          placeholder: "I usually have...",
+          reference: "I usually have one cup of coffee in the morning. I take my coffee with milk and no sugar. Caffeine has a big effect on me, so I have trouble sleeping if I drink it too late. I haven't tried to cut down on coffee because I don't drink very much.",
+        },
+      },
+    ],
+  },
 ]);
 
 const defaultBook = contentLibrary[0];
@@ -1099,6 +1236,7 @@ const activityNames: Record<ActivityTab, string> = {
   learn: "意群卡片",
   quiz: "快速测验",
   build: "组装句子",
+  shadowing: "对话模仿",
   article: "文章学习",
 };
 
@@ -1111,7 +1249,11 @@ function categoriesFor(book: Book) {
 }
 
 function unitsForActivity(book: Book, activity: ActivityTab) {
-  return book.units.filter((unit) => activity === "article" ? Boolean(unit.article) : !unit.article);
+  return book.units.filter((unit) => {
+    if (activity === "article") return Boolean(unit.article);
+    if (activity === "shadowing") return Boolean(unit.shadowing);
+    return !unit.article;
+  });
 }
 
 function categoriesForActivity(book: Book, activity: ActivityTab) {
@@ -1278,7 +1420,7 @@ function buildQuizQuestions(chunks: Chunk[], previousWrongIds: number[]) {
 }
 
 export default function Home() {
-  const [tab, setTab] = useState<"learn" | "quiz" | "build" | "article" | "manage">("learn");
+  const [tab, setTab] = useState<"learn" | "quiz" | "build" | "shadowing" | "article" | "manage">("learn");
   const [activeBookId, setActiveBookId] = useState(defaultBook.id);
   const [activeUnitId, setActiveUnitId] = useState(defaultUnit.id);
   const [libraryPicker, setLibraryPicker] = useState<"book" | "category" | "unit" | null>(null);
@@ -1287,6 +1429,7 @@ export default function Home() {
   const activeBook = contentLibrary.find((book) => book.id === activeBookId) ?? defaultBook;
   const activeUnit = activeBook.units.find((unit) => unit.id === activeUnitId) ?? activeBook.units[0];
   const activeArticle = activeUnit.article ?? socialMediaAlgorithmsArticle;
+  const activeShadowing = activeUnit.shadowing ?? coffeeShadowing;
   const [chunks, setChunks] = useState<Chunk[]>(starterChunks);
   const [progress, setProgress] = useState<Progress>({});
   const [dailyPractice, setDailyPractice] = useState<DailyPractice>({});
@@ -1308,6 +1451,14 @@ export default function Home() {
   const [revealedArticleSentences, setRevealedArticleSentences] = useState<number[]>([]);
   const [playingArticleSentence, setPlayingArticleSentence] = useState<number | null>(null);
   const articleAudioRef = useRef<HTMLAudioElement | null>(null);
+  const shadowAudioRef = useRef<HTMLAudioElement | null>(null);
+  const [playingShadowClip, setPlayingShadowClip] = useState<number | null>(null);
+  const [loopingShadowClip, setLoopingShadowClip] = useState<number | null>(null);
+  const [shadowingSpeed, setShadowingSpeed] = useState(1);
+  const [hiddenShadowText, setHiddenShadowText] = useState<number[]>([]);
+  const [hiddenShadowSpeaker, setHiddenShadowSpeaker] = useState<Record<number, string>>({});
+  const [shadowAnswers, setShadowAnswers] = useState<Record<number, string>>({});
+  const [revealedShadowReferences, setRevealedShadowReferences] = useState<number[]>([]);
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
@@ -1360,6 +1511,14 @@ export default function Home() {
     if (!hydrated) return;
     window.localStorage.setItem("bec-global-quiz-wrong", JSON.stringify(quizWrongIds));
   }, [quizWrongIds, hydrated]);
+
+  useEffect(() => {
+    if (shadowAudioRef.current) shadowAudioRef.current.playbackRate = shadowingSpeed;
+  }, [shadowingSpeed]);
+
+  useEffect(() => () => {
+    shadowAudioRef.current?.pause();
+  }, []);
 
   const stats = useMemo(() => {
     const attempts = Object.values(progress).reduce(
@@ -1451,6 +1610,41 @@ export default function Home() {
     void audio.play().catch(() => setPlayingArticleSentence(null));
   }
 
+  function stopShadowAudio() {
+    shadowAudioRef.current?.pause();
+    shadowAudioRef.current = null;
+    setPlayingShadowClip(null);
+    setLoopingShadowClip(null);
+  }
+
+  function playShadowingClip(clip: ShadowingClip, loop: boolean) {
+    if (playingShadowClip === clip.id && (loopingShadowClip === clip.id) === loop) {
+      stopShadowAudio();
+      return;
+    }
+    stopShadowAudio();
+    const audio = new Audio(clip.audioSrc);
+    shadowAudioRef.current = audio;
+    audio.preload = "auto";
+    audio.playbackRate = shadowingSpeed;
+    audio.onloadedmetadata = () => {
+      audio.currentTime = clip.start;
+      void audio.play().catch(stopShadowAudio);
+    };
+    audio.ontimeupdate = () => {
+      if (audio.currentTime < clip.end) return;
+      if (loop) {
+        audio.currentTime = clip.start;
+        void audio.play().catch(stopShadowAudio);
+      } else {
+        stopShadowAudio();
+      }
+    };
+    audio.onerror = stopShadowAudio;
+    setPlayingShadowClip(clip.id);
+    setLoopingShadowClip(loop ? clip.id : null);
+  }
+
   function answerQuiz(option: string) {
     if (!currentQuizQuestion || feedback) return;
     const isCorrect = normalize(option) === normalize(currentQuizQuestion.answer);
@@ -1534,6 +1728,7 @@ export default function Home() {
 
   function loadUnit(unit: Unit) {
     window.speechSynthesis?.cancel();
+    stopShadowAudio();
     setActiveUnitId(unit.id);
     setChunks(unit.chunks);
     setCardIndex(0);
@@ -1562,6 +1757,7 @@ export default function Home() {
     loadUnit(unit);
     setLibraryPicker(null);
     if (unit.article) setTab("article");
+    else if (unit.shadowing) setTab("shadowing");
   }
 
   function beginActivity(activity: ActivityTab) {
@@ -1626,7 +1822,7 @@ export default function Home() {
 
       <div className="page-grid" id="top">
         <aside className="sidebar">
-          <p className="eyebrow">{tab === "quiz" ? "ALL CONTENT" : tab === "article" ? activeBook.name : activeBook.name.toUpperCase()}</p>
+          <p className="eyebrow">{tab === "quiz" ? "ALL CONTENT" : tab === "article" || tab === "shadowing" ? activeBook.name : activeBook.name.toUpperCase()}</p>
           <nav aria-label="学习功能">
             <button className={highlightedTab === "learn" ? "active" : ""} onClick={() => beginActivity("learn")}>
               <span>01</span> 意群卡片
@@ -1637,11 +1833,14 @@ export default function Home() {
             <button className={highlightedTab === "build" ? "active" : ""} onClick={() => beginActivity("build")}>
               <span>03</span> 组装句子
             </button>
+            <button className={highlightedTab === "shadowing" ? "active" : ""} onClick={() => beginActivity("shadowing")}>
+              <span>04</span> 对话模仿
+            </button>
             <button className={tab === "article" && !activityPicker ? "active" : ""} onClick={() => beginActivity("article")}>
-              <span>04</span> 文章学习
+              <span>05</span> 文章学习
             </button>
             <button className={tab === "manage" && !activityPicker ? "active" : ""} onClick={() => { setActivityPicker(null); setTab("manage"); }}>
-              <span>05</span> 内容清单
+              <span>06</span> 内容清单
             </button>
           </nav>
 
@@ -1660,6 +1859,13 @@ export default function Home() {
                 <div className="unit-progress"><i style={{ width: "100%" }} /></div>
                 <small>{activeArticle.sentences.length} 句原声精听</small>
               </>
+            ) : tab === "shadowing" ? (
+              <>
+                <span>{activeUnit.category}</span>
+                <strong>{activeUnit.name}</strong>
+                <div className="unit-progress"><i style={{ width: "100%" }} /></div>
+                <small>{activeShadowing.clips.length} 段原声对话模仿</small>
+              </>
             ) : (
               <>
                 <span>{activeUnit.category.toUpperCase()}</span>
@@ -1676,7 +1882,7 @@ export default function Home() {
             <div>
               <p className="section-kicker">{tab === "quiz"
                 ? `全部内容 · ${allQuizChunks.length} 个意群`
-                : tab === "article"
+                : tab === "article" || tab === "shadowing"
                 ? `${activeBook.name} · ${activeUnit.category} · ${activeUnit.section.toUpperCase()}`
                 : `${activeUnit.category.toUpperCase()} · ${activeUnit.section.toUpperCase()}`}</p>
               {tab !== "learn" && (
@@ -1686,11 +1892,15 @@ export default function Home() {
                     ? "把意群放进真正的句子里。"
                     : tab === "article"
                       ? activeArticle.title
+                      : tab === "shadowing"
+                        ? activeUnit.name
                       : "每张截图，都会变成可练习的内容。"}</h1>
               )}
             </div>
             {tab === "article" ? (
               <div className="metric"><strong>{activeArticle.sentences.length}</strong><span>逐句原声</span></div>
+            ) : tab === "shadowing" ? (
+              <div className="metric"><strong>{activeShadowing.clips.length}</strong><span>关键对话</span></div>
             ) : (
               <div className="metric"><strong>{accuracy}%</strong><span>当前正确率</span></div>
             )}
@@ -1860,6 +2070,122 @@ export default function Home() {
             </div>
           )}
 
+          {tab === "shadowing" && (
+            <section className="shadowing-stage">
+              <header className="shadowing-header">
+                <div>
+                  <span>{activeShadowing.date} · LISTEN, IMITATE, RESPOND</span>
+                  <p>{activeShadowing.subtitle}</p>
+                </div>
+                <a href={activeUnit.sourceUrl} target="_blank" rel="noreferrer">查看原始课程 <span>↗</span></a>
+              </header>
+
+              <div className="shadowing-toolbar">
+                <div>
+                  <strong>原声速度</strong>
+                  <span>先听完整对话，再循环模仿；熟悉后隐藏一位说话人的台词。</span>
+                </div>
+                <div className="speed-options" role="group" aria-label="原声播放速度">
+                  {[0.75, 0.9, 1].map((speed) => (
+                    <button type="button" className={shadowingSpeed === speed ? "active" : ""} key={speed} onClick={() => setShadowingSpeed(speed)}>{speed}×</button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="shadowing-clips">
+                {activeShadowing.clips.map((clip, index) => {
+                  const textHidden = hiddenShadowText.includes(clip.id);
+                  const hiddenSpeaker = hiddenShadowSpeaker[clip.id];
+                  const speakers = [...new Set(clip.turns.map((turn) => turn.speaker))];
+                  const isPlaying = playingShadowClip === clip.id;
+                  const isLooping = loopingShadowClip === clip.id;
+                  const referenceRevealed = revealedShadowReferences.includes(clip.id);
+                  return (
+                    <article className={`shadowing-clip ${isPlaying ? "playing" : ""}`} key={clip.id}>
+                      <div className="shadowing-clip-heading">
+                        <div className="shadowing-clip-number">{String(index + 1).padStart(2, "0")}</div>
+                        <div>
+                          <span>{clip.goal}</span>
+                          <h2>{clip.title}</h2>
+                        </div>
+                      </div>
+
+                      <div className="shadowing-audio-controls">
+                        <button type="button" className={isPlaying && !isLooping ? "active" : ""} onClick={() => playShadowingClip(clip, false)}>
+                          {isPlaying && !isLooping ? "■ 停止" : "▶ 听完整对话"}
+                        </button>
+                        <button type="button" className={isLooping ? "active loop" : ""} onClick={() => playShadowingClip(clip, true)}>
+                          {isLooping ? "■ 停止循环" : "↻ 循环模仿"}
+                        </button>
+                        <span>{Math.round(clip.end - clip.start)} 秒原声</span>
+                      </div>
+
+                      <div className="shadowing-mode-row">
+                        <button type="button" className={textHidden ? "active" : ""} onClick={() => setHiddenShadowText((current) => current.includes(clip.id) ? current.filter((id) => id !== clip.id) : [...current, clip.id])}>
+                          {textHidden ? "显示全部文本" : "隐藏全部文本"}
+                        </button>
+                        {speakers.map((speaker) => (
+                          <button type="button" className={hiddenSpeaker === speaker ? "active" : ""} key={speaker} onClick={() => setHiddenShadowSpeaker((current) => ({ ...current, [clip.id]: current[clip.id] === speaker ? "" : speaker }))}>
+                            {hiddenSpeaker === speaker ? `显示 ${speaker}` : `我来扮演 ${speaker}`}
+                          </button>
+                        ))}
+                      </div>
+
+                      <div className={`shadowing-transcript ${textHidden ? "hidden" : ""}`}>
+                        {textHidden ? (
+                          <button type="button" className="shadowing-reveal" onClick={() => setHiddenShadowText((current) => current.filter((id) => id !== clip.id))}>文本已隐藏 · 点击查看</button>
+                        ) : clip.turns.map((turn, turnIndex) => (
+                          <div className={`shadowing-turn ${hiddenSpeaker === turn.speaker ? "role-hidden" : ""}`} key={`${turn.speaker}-${turnIndex}`}>
+                            <strong>{turn.speaker}</strong>
+                            {hiddenSpeaker === turn.speaker
+                              ? <button type="button" onClick={() => setHiddenShadowSpeaker((current) => ({ ...current, [clip.id]: "" }))}>轮到你接话 · 点击查看原句</button>
+                              : <p>{renderDialogueText(turn)}</p>}
+                          </div>
+                        ))}
+                      </div>
+
+                      <div className="shadowing-output">
+                        <span>YOUR TURN · 脱稿回答</span>
+                        <strong>{clip.outputQuestion}</strong>
+                        <textarea
+                          value={shadowAnswers[clip.id] ?? ""}
+                          onChange={(event) => setShadowAnswers((current) => ({ ...current, [clip.id]: event.target.value }))}
+                          placeholder="先口头回答，再把自己的版本写在这里……"
+                          aria-label={`${clip.title} 个性化回答`}
+                        />
+                        <div>
+                          <small>{(shadowAnswers[clip.id] ?? "").trim().split(/\s+/).filter(Boolean).length} words</small>
+                          <button type="button" onClick={() => setRevealedShadowReferences((current) => current.includes(clip.id) ? current.filter((id) => id !== clip.id) : [...current, clip.id])}>
+                            {referenceRevealed ? "隐藏参考" : "查看参考表达"}
+                          </button>
+                        </div>
+                        {referenceRevealed && <p className="shadowing-reference">{clip.outputReference}</p>}
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+
+              <section className="shadowing-recap">
+                <div>
+                  <span>VOCABULARY RECAP</span>
+                  <h2>听完对话，再集中复习。</h2>
+                  <p>这一部分不做整段模仿，只用于确认词义、发音和固定搭配。</p>
+                </div>
+                <div className="shadowing-recap-list">
+                  {activeShadowing.recap.map((item) => (
+                    <article key={item.expression}>
+                      <strong>{item.expression}</strong>
+                      {item.ipa && <span>{item.ipa}</span>}
+                      <p>{item.chinese}</p>
+                      <button type="button" onClick={() => speak(item.expression)}>▶</button>
+                    </article>
+                  ))}
+                </div>
+              </section>
+            </section>
+          )}
+
           {tab === "article" && (
             <section className="article-stage">
               <div className="article-header">
@@ -1962,6 +2288,7 @@ export default function Home() {
                   <div className="lesson-resources">
                     <a href={activeUnit.sourceUrl} target="_blank" rel="noreferrer">查看原始课程 <span>↗</span></a>
                     {activeUnit.dialogueSummary && <button type="button" onClick={() => setDialogueUnit(activeUnit)}>打开对话版摘要 <span>→</span></button>}
+                    {activeUnit.shadowing && <button type="button" onClick={() => setTab("shadowing")}>打开对话模仿 <span>→</span></button>}
                   </div>
                 )}
                 <div className="library-heading">
@@ -2069,6 +2396,9 @@ export default function Home() {
                           <a href={unit.sourceUrl} target="_blank" rel="noreferrer">查看原始课程 <span>↗</span></a>
                           {unit.dialogueSummary && (
                             <button type="button" onClick={() => setDialogueUnit(unit)}>对话版摘要 <span>→</span></button>
+                          )}
+                          {unit.shadowing && (
+                            <button type="button" onClick={() => { setActiveBookId(pickerBook.id); loadUnit(unit); setTab("shadowing"); setActivityPicker(null); }}>对话模仿 <span>→</span></button>
                           )}
                         </div>
                       )}
